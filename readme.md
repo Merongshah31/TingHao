@@ -182,6 +182,7 @@ Implementation reference for future maintenance:
 
 * [Current Function Inventory](docs/current-function-inventory.md)
 * [Core Function Plan](docs/core-function-plan.md)
+* [Backend API Documentation](docs/backend-api.md)
 * [Implementation Reference](docs/implementation-reference.md)
 * [Render Deployment Guide](docs/render-deploy.md)
 * [Supabase Setup](docs/supabase-setup.md)
