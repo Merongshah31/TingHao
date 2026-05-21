@@ -1,6 +1,6 @@
 # Render Deployment Guide
 
-This project is prepared for Render using Docker, Nginx, PHP-FPM, Laravel, Vite-built frontend assets, and Supabase PostgreSQL.
+This project is prepared for Render using Docker, Nginx, PHP 8.4 FPM, Laravel, Vite-built frontend assets, and Supabase PostgreSQL.
 
 References:
 
@@ -21,6 +21,7 @@ The Docker image:
 
 - Installs Composer production dependencies.
 - Builds Vite frontend assets.
+- Uses PHP 8.4, which is required by the current Laravel/Symfony dependency lockfile.
 - Installs PHP PostgreSQL extensions.
 - Runs Nginx and PHP-FPM together.
 - Runs `php artisan migrate --force` on startup.
