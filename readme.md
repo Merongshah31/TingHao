@@ -186,8 +186,26 @@ Implementation reference for future maintenance:
 * [Supabase Setup](docs/supabase-setup.md)
 
 
-## admin login
-admin@tinghao.com
-password
+
 
 Verification passed: php artisan route:list shows POST login, and php artisan test passed.
+
+## phase status
+
+Phase 1: Access foundation complete.
+Phase 2: Inventory foundation complete.
+Phase 3: Stock control complete.
+Phase 4: Low-stock alerts and expiry tracking complete.
+Phase 5: Supplier management complete.
+Phase 6: Reports and analytics complete.
+Phase 7: System management complete.
+
+## demo data
+
+Run this command to inject presentation-ready mock data:
+
+```bash
+php artisan db:seed
+```
+
+The seeder creates admin/staff users, categories, suppliers, ingredients, stock movements, restock requests, system settings, and a backup snapshot.

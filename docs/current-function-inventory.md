@@ -10,12 +10,32 @@ The project is currently a Laravel 13 application with:
 
 - A public landing page for Ting Hao.
 - A visual admin/staff login page.
+- Real Laravel login/logout handling.
+- Role-aware admin and staff dashboard routing.
+- Inventory category and ingredient database tables.
+- Inventory list, add, view, edit, delete, search, and category filter pages.
+- Stock movement database table.
+- Stock-in and stock-out recording.
+- Stock movement history with filters.
+- Automatic ingredient quantity updates after stock movement.
+- Low-stock alert page.
+- Restock request workflow for low-stock items.
+- Expiry tracking for expiring-soon and expired ingredients.
+- Expired stock removal action that records stock-out history.
+- Supplier database table.
+- Supplier list, add, view, edit, and search pages.
+- Ingredients can be linked to a supplier.
+- Reports dashboard.
+- Inventory, stock movement, low-stock, and expiry report pages.
+- Admin-only generated summary report.
+- System settings page.
+- Backup snapshot records.
 - A shared Blade layout.
 - A custom CSS theme for the public and login pages.
 - Default Laravel database tables for users, sessions, cache, and queues.
 - Basic starter tests.
 
-The inventory management system modules described in the README are still mostly planned. Real authentication, admin dashboards, stock management, suppliers, reports, and role permissions are not implemented yet.
+The inventory management system now has authentication, role-aware dashboards, inventory foundation, stock control, low-stock alerts, restock workflow, expiry tracking, supplier management, reports, and system management.
 
 ## 2. Implemented User-Facing Pages
 
@@ -66,15 +86,14 @@ Current functions:
 - Includes CSRF token field in the form.
 - Includes sign-in button.
 - Includes privacy and support link placeholders.
+- Submits to the Laravel login route.
+- Rejects invalid or inactive accounts.
+- Redirects authenticated users to their role dashboard.
 
 Current limitations:
 
-- Form action is `#`, so it does not submit to a real login endpoint.
-- No authentication controller exists yet.
-- No login validation exists yet.
-- No session login/logout flow exists yet.
 - Forgot password is visual only.
-- No role handling for admin or staff exists yet.
+- Role handling currently covers dashboard access only. Module-level permission rules still need to be added as each module is built.
 
 ## 3. Routing
 
@@ -88,14 +107,84 @@ Implemented routes:
 | --- | --- | --- | --- |
 | GET | `/` | `home` | Show public Ting Hao landing page |
 | GET | `/login` | `login` | Show visual staff/admin login page |
+| POST | `/login` | `login.store` | Authenticate user credentials |
+| GET | `/dashboard` | `dashboard` | Redirect user to role dashboard |
+| GET | `/admin/dashboard` | `admin.dashboard` | Show protected admin dashboard |
+| GET | `/staff/dashboard` | `staff.dashboard` | Show protected staff dashboard |
+| GET | `/inventory` | `inventory.index` | Show searchable inventory list |
+| GET | `/inventory/create` | `inventory.create` | Show add ingredient form |
+| POST | `/inventory` | `inventory.store` | Store new ingredient |
+| GET | `/inventory/{ingredient}` | `inventory.show` | Show ingredient detail |
+| GET | `/inventory/{ingredient}/edit` | `inventory.edit` | Show edit ingredient form |
+| PUT | `/inventory/{ingredient}` | `inventory.update` | Update ingredient |
+| DELETE | `/inventory/{ingredient}` | `inventory.destroy` | Delete ingredient |
+| GET | `/stock/history` | `stock.index` | Show stock movement history |
+| GET | `/inventory/{ingredient}/stock/{type}` | `stock.create` | Show stock-in or stock-out form |
+| POST | `/inventory/{ingredient}/stock/{type}` | `stock.store` | Record stock-in or stock-out |
+| GET | `/alerts/low-stock` | `alerts.low-stock` | Show low-stock alerts |
+| POST | `/alerts/low-stock/{ingredient}/restock` | `alerts.restock.request` | Create restock request |
+| PATCH | `/alerts/restock/{restockRequest}` | `alerts.restock.update` | Update restock status |
+| GET | `/expiry` | `expiry.index` | Show expiry tracking |
+| POST | `/expiry/{ingredient}/remove` | `expiry.remove` | Remove expired stock |
+| GET | `/suppliers` | `suppliers.index` | Show supplier list |
+| GET | `/suppliers/create` | `suppliers.create` | Show add supplier form |
+| POST | `/suppliers` | `suppliers.store` | Store new supplier |
+| GET | `/suppliers/{supplier}` | `suppliers.show` | Show supplier detail |
+| GET | `/suppliers/{supplier}/edit` | `suppliers.edit` | Show edit supplier form |
+| PUT | `/suppliers/{supplier}` | `suppliers.update` | Update supplier |
+| GET | `/reports` | `reports.index` | Show reports dashboard |
+| GET | `/reports/inventory` | `reports.inventory` | Show inventory report |
+| GET | `/reports/stock` | `reports.stock` | Show stock movement report |
+| GET | `/reports/low-stock` | `reports.low-stock` | Show low-stock report |
+| GET | `/reports/expiry` | `reports.expiry` | Show expiry report |
+| GET | `/reports/generated-summary` | `reports.generated-summary` | Show admin generated summary report |
+| GET | `/system/settings` | `system.settings` | Show system settings |
+| PUT | `/system/settings` | `system.settings.update` | Update system settings |
+| GET | `/system/backups` | `system.backups` | Show backup records |
+| POST | `/system/backups` | `system.backups.create` | Create backup snapshot |
+| POST | `/logout` | `logout` | End authenticated session |
 
 Current routing limitations:
 
-- No POST login route.
-- No logout route.
-- No dashboard routes.
 - No inventory, supplier, report, user-management, or stock-movement routes.
-- Routes currently use closures/views instead of controllers.
+- Home page still uses a route closure.
+
+Inventory route permissions:
+
+- Admin and Staff can view inventory and add ingredients.
+- Admin can edit and delete ingredients.
+- Staff cannot edit or delete ingredients.
+
+Stock route permissions:
+
+- Admin and Staff can view stock history.
+- Admin and Staff can record stock in.
+- Admin and Staff can record stock out.
+
+Alert and expiry permissions:
+
+- Admin and Staff can view low-stock alerts.
+- Admin can manage restock requests.
+- Admin and Staff can view expiry tracking.
+- Admin can remove expired stock.
+
+Supplier permissions:
+
+- Admin and Staff can view suppliers.
+- Admin can add suppliers.
+- Admin can edit suppliers.
+- Supplier deletion is not implemented because it is not listed in the UAF table.
+
+Report permissions:
+
+- Admin and Staff can view reports.
+- Admin can generate the summary report.
+- Admin-only Excel upload/download for reports is confirmed but not implemented yet.
+
+System permissions:
+
+- Admin can manage system settings.
+- Admin can create backup snapshots.
 
 ## 4. Layout And Styling
 
@@ -145,15 +234,16 @@ Current functions:
 
 - Uses Laravel authenticatable user model.
 - Supports factories and notifications.
-- Fillable fields: `name`, `email`, `password`.
+- Fillable fields: `name`, `email`, `password`, `role`, `status`.
 - Hidden fields: `password`, `remember_token`.
 - Casts `email_verified_at` to datetime.
 - Casts `password` using Laravel hashed cast.
+- Provides role helpers for admin and staff.
+- Provides active-account helper.
 
 Current limitations:
 
-- No role field exists.
-- No staff/admin permission logic exists.
+- Role middleware is implemented for dashboard access, but module-level permissions still depend on future modules.
 - No custom profile or staff fields exist.
 
 ### Existing Migrations
@@ -163,6 +253,15 @@ Files:
 - `database/migrations/0001_01_01_000000_create_users_table.php`
 - `database/migrations/0001_01_01_000001_create_cache_table.php`
 - `database/migrations/0001_01_01_000002_create_jobs_table.php`
+- `database/migrations/2026_05_21_000001_add_role_and_status_to_users_table.php`
+- `database/migrations/2026_05_21_000002_create_categories_table.php`
+- `database/migrations/2026_05_21_000003_create_ingredients_table.php`
+- `database/migrations/2026_05_21_000004_create_stock_movements_table.php`
+- `database/migrations/2026_05_21_000005_create_restock_requests_table.php`
+- `database/migrations/2026_05_21_000006_create_suppliers_table.php`
+- `database/migrations/2026_05_21_000007_add_supplier_id_to_ingredients_table.php`
+- `database/migrations/2026_05_21_000008_create_system_settings_table.php`
+- `database/migrations/2026_05_21_000009_create_backup_records_table.php`
 
 Implemented database tables:
 
@@ -176,13 +275,16 @@ Implemented database tables:
 | `jobs` | Queue job storage |
 | `job_batches` | Batched queue job storage |
 | `failed_jobs` | Failed queue job storage |
+| `categories` | Ingredient category records |
+| `ingredients` | Inventory ingredient records |
+| `stock_movements` | Stock in/out quantity history |
+| `restock_requests` | Low-stock restock workflow records |
+| `suppliers` | Supplier contact and source records |
+| `system_settings` | Configurable shop and system values |
+| `backup_records` | Backup snapshot audit records |
 
 Current database limitations:
 
-- No products table.
-- No inventory table.
-- No stock movements table.
-- No suppliers table.
 - No purchase orders table.
 - No sales table.
 - No roles or permissions tables.
@@ -195,15 +297,32 @@ File:
 
 Current functions:
 
-- Creates one default test user through the user factory.
-- User name: `Test User`
-- User email: `test@example.com`
+- Creates or updates the admin account.
+- Creates or updates the staff account.
+- Creates starter categories: Flour, Sugar, Dairy, Leavening, Packaging.
+- Creates demo suppliers.
+- Creates demo ingredients for presentation.
+- Creates demo stock movement records.
+- Creates demo restock requests.
+- Creates demo system settings.
+- Creates a demo backup snapshot.
 
-Current limitations:
+Seed accounts:
 
-- No known default password is documented in the project files.
-- No admin or staff seed users are defined.
-- No inventory sample data exists.
+| Role | Email | Password |
+| --- | --- | --- |
+| Admin | `admin@tinghao.com` | `password` |
+| Staff | `staff@tinghao.com` | `password` |
+
+Demo data coverage:
+
+- Normal inventory items.
+- Low-stock items.
+- Expiring-soon items.
+- Expired item.
+- Supplier-linked ingredients.
+- Stock in and stock out history.
+- Open restock requests.
 
 ## 6. Frontend Build Setup
 
@@ -274,19 +393,10 @@ Important distinction:
 
 The following features are described or implied by the project idea, but are not built yet:
 
-- Real admin/staff authentication.
-- Admin dashboard.
-- Staff dashboard.
-- Role-based access control.
 - User management for staff accounts.
-- Inventory/product CRUD.
-- Stock-in and stock-out recording.
-- Low stock alerts.
-- Supplier management.
+- Admin Excel report upload/download.
 - Purchase order management.
 - Sales entry.
-- Reports and analytics.
-- Backup/settings/system control pages.
 - Real product search.
 - Real map/contact integration.
 - Local image asset management.
@@ -295,16 +405,10 @@ The following features are described or implied by the project idea, but are not
 
 Suggested priority:
 
-1. Implement real authentication: POST login, logout, session handling, and protected routes.
-2. Add roles: admin and staff.
-3. Create dashboard routes and layouts for authenticated users.
-4. Design database schema for products, suppliers, stock movements, and sales.
-5. Build inventory CRUD first because other modules depend on it.
-6. Add stock-in and stock-out workflows.
-7. Add low-stock reports.
-8. Add supplier management.
-9. Add staff user management for admins.
-10. Replace placeholder public page content with real business data and local images.
+1. Add Admin Excel report upload/download.
+2. Add staff user management for admins.
+3. Add purchase order management if needed.
+4. Replace placeholder public page content with real business data and local images.
 
 ## 11. Quick Development Notes
 

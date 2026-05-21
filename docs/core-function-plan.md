@@ -102,6 +102,12 @@ Subfunctions:
 - Filter by category.
 - View ingredient details.
 
+Permission decision:
+
+- Admin and Staff can add ingredients.
+- Only Admin can edit or delete ingredient records.
+- The system uses the term `ingredients` for all inventory items instead of separating products and ingredients.
+
 Possible ingredient fields:
 
 - Ingredient name.
@@ -142,6 +148,13 @@ Stock movement types:
 - Stock out.
 - Manual adjustment.
 - Expired item removal.
+- Sales.
+- Production usage.
+- Damaged items.
+
+Confirmed rule:
+
+- Stock out can represent sales, usage, damaged items, expired items, or any other outgoing stock reason.
 
 Needed pages:
 
@@ -193,6 +206,11 @@ Subfunctions:
 - Manage expired items.
 - Remove expired stock from inventory.
 
+Permission decision:
+
+- Admin and Staff can view expiry dates.
+- Only Admin can manage expired items and remove expired stock.
+
 Needed pages:
 
 - Expiry tracking page.
@@ -238,6 +256,8 @@ Subfunctions:
 
 - View inventory report.
 - Generate reports.
+- Download Excel reports.
+- Upload Excel report/import files.
 - Filter by date range.
 - Filter by ingredient.
 - Filter by category.
@@ -245,10 +265,11 @@ Subfunctions:
 - View stock movement report.
 - View expiry report.
 
-Possible future export:
+Excel rule:
 
-- PDF export.
-- Excel export.
+- Admin can upload and download Excel reports.
+- Staff can view reports, but cannot upload or download Excel reports unless this is changed later.
+- PDF export can be added later if needed.
 
 Needed pages:
 
@@ -300,6 +321,8 @@ Possible simpler option:
 
 ### Phase 1: Access Foundation
 
+Status: implemented.
+
 1. Add `role` and `status` columns to users.
 2. Update seed data for admin and staff.
 3. Add role middleware.
@@ -307,12 +330,16 @@ Possible simpler option:
 
 ### Phase 2: Inventory Foundation
 
+Status: implemented.
+
 1. Create ingredient/category tables.
 2. Build inventory list.
 3. Build add/edit/delete ingredient forms.
 4. Add search and filtering.
 
 ### Phase 3: Stock Control
+
+Status: implemented.
 
 1. Create stock movement table.
 2. Build stock in form.
@@ -322,6 +349,8 @@ Possible simpler option:
 
 ### Phase 4: Alerts And Expiry
 
+Status: implemented.
+
 1. Add minimum stock level logic.
 2. Build low-stock list.
 3. Add restock process status.
@@ -330,33 +359,40 @@ Possible simpler option:
 
 ### Phase 5: Suppliers
 
+Status: implemented.
+
 1. Create supplier table.
 2. Build supplier CRUD.
 3. Link suppliers to ingredients.
 
 ### Phase 6: Reports
 
+Status: implemented.
+
 1. Build inventory report.
 2. Build stock movement report.
 3. Build low-stock report.
 4. Build expiry report.
-5. Add export later if needed.
+5. Excel upload/download is confirmed as an Admin-only enhancement to add next.
 
 ### Phase 7: System Management
+
+Status: implemented.
 
 1. Add settings table.
 2. Build settings page.
 3. Add backup process.
 
-## 7. Open Decisions
+## 7. Confirmed Decisions
 
-These should be confirmed before implementation:
+These decisions are now confirmed:
 
-- Should Staff be allowed to add new ingredients, or should only Admin add ingredients?
-- Should products and ingredients be separate tables, or should everything be called ingredients?
-- Should stock out represent sales, usage, damaged items, expired items, or all of them?
-- Should Staff be allowed to view expiry dates only, while Admin manages expired items?
-- Should reports include export to PDF or Excel in the first version?
+- Admin and Staff can both add ingredients.
+- All inventory items should be called ingredients.
+- Stock out covers sales, usage, damaged items, expired items, and other outgoing reasons.
+- Staff can view expiry dates only.
+- Admin manages expired items.
+- Admin should be able to upload and download Excel reports.
 
 ## 8. Current Recommendation
 
@@ -365,4 +401,4 @@ For a practical inventory system, the safest permission model is:
 - Admin: full control over account, inventory, supplier, reports, backup, and settings.
 - Staff: operational access for login, profile, viewing inventory, adding ingredients, stock movement, alert viewing, expiry viewing, supplier viewing, and report viewing.
 
-This document now follows the corrected UAF table. Final permission rules should still be confirmed before coding role middleware.
+This document now follows the corrected UAF table and the confirmed project decisions.

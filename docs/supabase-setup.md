@@ -149,6 +149,13 @@ Email: admin@tinghao.com
 Password: password
 ```
 
+Current staff seed:
+
+```text
+Email: staff@tinghao.com
+Password: password
+```
+
 ## 6. Expected Tables After Migration
 
 The current project migrations create:
@@ -161,16 +168,20 @@ The current project migrations create:
 - `jobs`
 - `job_batches`
 - `failed_jobs`
+- `categories`
+- `ingredients`
+- `stock_movements`
+- `restock_requests`
+- `suppliers`
+- `system_settings`
+- `backup_records`
 
-Inventory tables are not created yet. They should be added next with Laravel migrations.
+Report and purchase order tables are not created yet. They should be added later if needed.
 
 Recommended next tables:
 
-- `products`
-- `suppliers`
-- `stock_movements`
 - `sales`
-- `roles` or a simple `role` column on `users`
+- `purchase_orders`
 
 ## 7. Files Added Or Updated
 

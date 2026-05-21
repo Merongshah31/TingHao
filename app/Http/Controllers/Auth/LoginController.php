@@ -28,6 +28,14 @@ class LoginController extends Controller
                 ->onlyInput('email');
         }
 
+        if (! $request->user()->isActive()) {
+            Auth::logout();
+
+            return back()
+                ->withErrors(['email' => 'This account is inactive. Please contact an administrator.'])
+                ->onlyInput('email');
+        }
+
         $request->session()->regenerate();
 
         return redirect()->intended(route('dashboard'));
