@@ -28,44 +28,57 @@
         </section>
 
         <section class="dashboard-analytics" aria-label="Dashboard analytics">
-            <article class="analytics-card analytics-value">
-                <div>
+            <article class="analytics-card analytics-value analytics-visual-card">
+                <div class="value-visual">
+                    <div>
+                        <span>Total</span>
+                        <strong>RM {{ number_format($analytics['inventoryValue'], 2) }}</strong>
+                    </div>
+                    <div class="value-bars" aria-hidden="true">
+                        <i style="height: 42%"></i>
+                        <i style="height: 62%"></i>
+                        <i style="height: 78%"></i>
+                        <i style="height: 54%"></i>
+                        <i style="height: 88%"></i>
+                    </div>
+                </div>
+                <div class="analytics-copy">
                     <p class="eyebrow">ANALYTICS</p>
                     <h2>Inventory Value</h2>
-                    <strong>RM {{ number_format($analytics['inventoryValue'], 2) }}</strong>
                     <span>Estimated value from current quantity and cost price.</span>
                 </div>
             </article>
 
-            <article class="analytics-card">
-                <div class="analytics-header">
-                    <div>
-                        <p class="eyebrow">STOCK HEALTH</p>
-                        <h2>{{ $analytics['stockHealthPercent'] }}%</h2>
+            <article class="analytics-card analytics-visual-card">
+                <div class="donut-wrap">
+                    <div class="donut-chart" style="--value: {{ $analytics['stockHealthPercent'] }};">
+                        <strong>{{ $analytics['stockHealthPercent'] }}%</strong>
+                        <span>healthy</span>
                     </div>
-                    <span>{{ 100 - $analytics['stockHealthPercent'] }}% need review</span>
+                    <div class="analytics-copy">
+                        <p class="eyebrow">STOCK HEALTH</p>
+                        <h2>{{ 100 - $analytics['stockHealthPercent'] }}% need review</h2>
+                        <span>Healthy ingredients are above their minimum stock level.</span>
+                    </div>
                 </div>
-                <div class="progress-track" aria-hidden="true">
-                    <span style="width: {{ $analytics['stockHealthPercent'] }}%"></span>
-                </div>
-                <p>Healthy ingredients are above their minimum stock level.</p>
             </article>
 
-            <article class="analytics-card">
-                <div class="analytics-header">
-                    <div>
-                        <p class="eyebrow">MOVEMENT MIX</p>
-                        <h2>{{ $analytics['stockOutPercent'] }}%</h2>
-                    </div>
-                    <span>stock out</span>
+            <article class="analytics-card movement-visual">
+                <div>
+                    <p class="eyebrow">MOVEMENT MIX</p>
+                    <h2>Stock Flow</h2>
                 </div>
-                <div class="split-bar" aria-hidden="true">
-                    <span class="stock-in" style="width: {{ $analytics['stockInPercent'] }}%"></span>
-                    <span class="stock-out" style="width: {{ $analytics['stockOutPercent'] }}%"></span>
+                <div class="flow-chart" aria-hidden="true">
+                    <div>
+                        <span class="flow-in" style="height: {{ max(12, $analytics['stockInPercent']) }}%"></span>
+                    </div>
+                    <div>
+                        <span class="flow-out" style="height: {{ max(12, $analytics['stockOutPercent']) }}%"></span>
+                    </div>
                 </div>
                 <div class="analytics-pair">
-                    <span>In: {{ number_format($analytics['stockIn'], 2) }}</span>
-                    <span>Out: {{ number_format($analytics['stockOut'], 2) }}</span>
+                    <span><i class="legend-dot in"></i> In {{ number_format($analytics['stockIn'], 2) }}</span>
+                    <span><i class="legend-dot out"></i> Out {{ number_format($analytics['stockOut'], 2) }}</span>
                 </div>
             </article>
         </section>
@@ -126,10 +139,13 @@
 
                 <div class="insight-list">
                     @forelse ($analytics['lowStockItems'] as $item)
-                        <div class="insight-row">
+                        <div class="insight-row visual-row">
                             <div>
                                 <strong>{{ $item['name'] }}</strong>
-                                <span>Minimum {{ number_format($item['minimum'], 2) }} {{ $item['unit'] }}</span>
+                                <span>Short {{ number_format($item['shortage'], 2) }} {{ $item['unit'] }} from minimum</span>
+                                <div class="stock-mini-bar" aria-hidden="true">
+                                    <i style="width: {{ $item['percent'] }}%"></i>
+                                </div>
                             </div>
                             <em>{{ number_format($item['quantity'], 2) }} {{ $item['unit'] }}</em>
                         </div>
@@ -150,7 +166,10 @@
 
                 <div class="insight-list">
                     @forelse ($analytics['recentMovements'] as $movement)
-                        <div class="insight-row">
+                        <div class="insight-row movement-row">
+                            <span class="movement-type {{ $movement->type === \App\Models\StockMovement::TYPE_IN ? 'in' : 'out' }}">
+                                {{ $movement->type === \App\Models\StockMovement::TYPE_IN ? 'IN' : 'OUT' }}
+                            </span>
                             <div>
                                 <strong>{{ $movement->ingredient?->name ?? 'Deleted ingredient' }}</strong>
                                 <span>{{ $movement->creator?->name ?? 'System' }} · {{ $movement->created_at->format('d M Y') }}</span>

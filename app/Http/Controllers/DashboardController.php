@@ -144,6 +144,10 @@ class DashboardController extends Controller
                 'name' => $ingredient->name,
                 'quantity' => (float) $ingredient->quantity,
                 'minimum' => (float) $ingredient->minimum_stock,
+                'percent' => (float) $ingredient->minimum_stock > 0
+                    ? min(100, round(((float) $ingredient->quantity / (float) $ingredient->minimum_stock) * 100))
+                    : 0,
+                'shortage' => max(0, (float) $ingredient->minimum_stock - (float) $ingredient->quantity),
                 'unit' => $ingredient->unit,
             ])
             ->values()
