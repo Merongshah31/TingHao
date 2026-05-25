@@ -180,6 +180,7 @@ This project is for educational purposes.
 
 Implementation reference for future maintenance:
 
+* [Product Requirements Document](prd.md)
 * [Current Function Inventory](docs/current-function-inventory.md)
 * [Core Function Plan](docs/core-function-plan.md)
 * [Backend API Documentation](docs/backend-api.md)
