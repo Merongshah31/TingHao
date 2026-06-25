@@ -12,7 +12,7 @@
             <div class="page-actions">
                 <a href="{{ route('dashboard') }}" class="btn btn-muted">{{ __('messages.dashboard') }}</a>
                 @if (auth()->user()->isAdmin())
-                    <a href="{{ route('purchase-orders.create-from-low-stock') }}" class="btn btn-muted">{{ __('messages.create_po_from_low_stock') }}</a>
+                    <a href="{{ route('po-demo.create') }}" class="btn btn-muted">{{ __('messages.create_demo_po_from_low_stock') }}</a>
                 @endif
                 <a href="{{ route('inventory.index') }}" class="btn btn-primary">{{ __('messages.inventory') }}</a>
             </div>

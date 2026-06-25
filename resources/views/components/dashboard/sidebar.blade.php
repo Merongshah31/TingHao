@@ -30,8 +30,8 @@
         <a href="{{ route('suppliers.index') }}" @class(['active' => request()->routeIs('suppliers.*')])>
             <i data-lucide="truck"></i><span>{{ __('messages.suppliers') }}</span>
         </a>
-        <a href="{{ route('purchase-orders.index') }}" @class(['active' => request()->routeIs('purchase-orders.*')])>
-            <i data-lucide="clipboard-list"></i><span>{{ __('messages.purchase_orders') }}</span>
+        <a href="{{ route('po-demo.index') }}" @class(['active' => request()->routeIs('po-demo.*')])>
+            <i data-lucide="send"></i><span>{{ __('messages.purchase_order_demo') }}</span>
         </a>
         <a href="{{ route('reports.index') }}" @class(['active' => request()->routeIs('reports.*')])>
             <i data-lucide="chart-no-axes-combined"></i><span>{{ __('messages.reports') }}</span>

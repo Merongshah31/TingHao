@@ -1375,7 +1375,9 @@ a {
 
 .po-status-draft { background: #edf1ee; color: #5c6861; }
 .po-status-sent { background: #e6f3fb; color: #1f648f; }
+.po-status-email_sent { background: #e6f3fb; color: #1f648f; }
 .po-status-confirmed,
+.po-status-supplier_confirmed,
 .po-status-received { background: #e8f6ec; color: #1e6934; }
 .po-status-partially_received { background: #fff3d8; color: #9b6414; }
 .po-status-closed { background: #e8ece9; color: #243329; }
@@ -1407,6 +1409,79 @@ a {
 
 .po-summary-panel {
     margin-bottom: 18px;
+}
+
+.po-demo-timeline {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 10px;
+    margin: 18px 0;
+}
+
+.po-demo-timeline div {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px;
+    border: 1px solid #dfe7e2;
+    border-radius: 14px;
+    background: #fff;
+    color: #68766d;
+    box-shadow: 0 10px 20px rgba(23, 53, 34, .035);
+}
+
+.po-demo-timeline span {
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: #edf1ee;
+    font-size: 12px;
+    font-weight: 900;
+}
+
+.po-demo-timeline strong {
+    font-size: 13px;
+}
+
+.po-demo-timeline div.active {
+    border-color: rgba(0, 122, 61, .26);
+    color: var(--forest-dark);
+    background: #f5fbf7;
+}
+
+.po-demo-timeline div.active span {
+    color: #fff;
+    background: var(--forest);
+}
+
+.po-email-preview {
+    margin-top: 18px;
+    padding: 22px;
+}
+
+.po-email-preview h2 {
+    margin: 4px 0 12px;
+    color: var(--forest-dark);
+}
+
+.email-preview-body {
+    margin-top: 16px;
+    padding: 16px;
+    border: 1px solid #e5ece7;
+    border-radius: 12px;
+    background: #fbfcfb;
+    color: #405047;
+    line-height: 1.6;
+}
+
+.po-demo-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 18px;
 }
 
 .pagination-wrap {
@@ -2985,6 +3060,10 @@ body:has(.saas-dashboard) .saas-topbar-actions {
 }
 
 @media (max-width: 720px) {
+    .po-demo-timeline {
+        grid-template-columns: 1fr;
+    }
+
     .smart-memory-summary,
     .smart-memory-grid,
     .smart-recommendations,

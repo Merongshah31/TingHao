@@ -6,6 +6,7 @@ use App\Http\Controllers\ExpiryController;
 use App\Http\Controllers\IngredientController;
 use App\Http\Controllers\LowStockController;
 use App\Http\Controllers\PurchaseOrderController;
+use App\Http\Controllers\PurchaseOrderDemoController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\StockMemoryDemoController;
 use App\Http\Controllers\StockMovementController;
@@ -108,6 +109,31 @@ Route::middleware('auth')->group(function () {
     Route::post('/purchase-orders/{purchaseOrder}/send-email', [PurchaseOrderController::class, 'sendEmail'])
         ->middleware('role:admin')
         ->name('purchase-orders.send-email');
+
+    Route::get('/purchase-order-demo', [PurchaseOrderDemoController::class, 'index'])
+        ->middleware('role:admin,staff')
+        ->name('po-demo.index');
+    Route::get('/purchase-order-demo/create', [PurchaseOrderDemoController::class, 'create'])
+        ->middleware('role:admin')
+        ->name('po-demo.create');
+    Route::post('/purchase-order-demo', [PurchaseOrderDemoController::class, 'store'])
+        ->middleware('role:admin')
+        ->name('po-demo.store');
+    Route::get('/purchase-order-demo/{po}', [PurchaseOrderDemoController::class, 'show'])
+        ->middleware('role:admin,staff')
+        ->name('po-demo.show');
+    Route::post('/purchase-order-demo/{po}/send-email-demo', [PurchaseOrderDemoController::class, 'sendEmailDemo'])
+        ->middleware('role:admin')
+        ->name('po-demo.send-email');
+    Route::post('/purchase-order-demo/{po}/confirm-demo', [PurchaseOrderDemoController::class, 'confirmDemo'])
+        ->middleware('role:admin')
+        ->name('po-demo.confirm');
+    Route::post('/purchase-order-demo/{po}/receive-demo', [PurchaseOrderDemoController::class, 'receiveDemo'])
+        ->middleware('role:admin,staff')
+        ->name('po-demo.receive');
+    Route::post('/purchase-order-demo/{po}/close-demo', [PurchaseOrderDemoController::class, 'closeDemo'])
+        ->middleware('role:admin')
+        ->name('po-demo.close');
 
     Route::get('/expiry', [ExpiryController::class, 'index'])->name('expiry.index');
     Route::post('/expiry/{ingredient}/remove', [ExpiryController::class, 'removeExpired'])

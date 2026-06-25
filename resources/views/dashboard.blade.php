@@ -106,12 +106,12 @@
                     <a href="{{ route('reports.index') }}">{{ __('messages.reports') }}</a>
                 </x-dashboard.action-card>
 
-                <x-dashboard.action-card icon="clipboard-list" :eyebrow="__('messages.supplier_management')" :title="__('messages.purchase_orders')" :description="__('messages.purchase_orders_dashboard')">
-                    <a href="{{ route('purchase-orders.index') }}">{{ __('messages.purchase_orders') }} <i data-lucide="arrow-right"></i></a>
+                <x-dashboard.action-card icon="send" :eyebrow="__('messages.purchase_order_demo')" :title="__('messages.purchase_order_demo')" :description="__('messages.purchase_order_demo_dashboard')">
+                    <a href="{{ route('po-demo.index') }}">{{ __('messages.open_demo_workflow') }} <i data-lucide="arrow-right"></i></a>
                     @if (auth()->user()->isAdmin())
-                        <a href="{{ route('purchase-orders.create') }}">{{ __('messages.create_purchase_order') }}</a>
+                        <a href="{{ route('po-demo.create') }}">{{ __('messages.create_demo_po') }}</a>
                     @else
-                        <a href="{{ route('suppliers.index') }}">{{ __('messages.suppliers') }}</a>
+                        <a href="{{ route('po-demo.index') }}">{{ __('messages.view') }}</a>
                     @endif
                 </x-dashboard.action-card>
 
