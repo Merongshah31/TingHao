@@ -31,10 +31,13 @@
             <i data-lucide="truck"></i><span>{{ __('messages.suppliers') }}</span>
         </a>
         <a href="{{ route('po-demo.index') }}" @class(['active' => request()->routeIs('po-demo.*')])>
-            <i data-lucide="send"></i><span>{{ __('messages.purchase_order_demo') }}</span>
+            <i data-lucide="send"></i><span>{{ __('messages.purchase_orders') }}</span>
         </a>
         <a href="{{ route('reports.index') }}" @class(['active' => request()->routeIs('reports.*')])>
             <i data-lucide="chart-no-axes-combined"></i><span>{{ __('messages.reports') }}</span>
+        </a>
+        <a href="{{ route('help-center.index') }}" @class(['active' => request()->routeIs('help-center.*')])>
+            <i data-lucide="circle-help"></i><span>{{ __('messages.faq_guidelines') }}</span>
         </a>
 
         @if (auth()->user()->isAdmin())

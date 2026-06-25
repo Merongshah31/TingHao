@@ -1484,6 +1484,140 @@ a {
     margin-top: 18px;
 }
 
+.help-center-page .page-shell {
+    max-width: 1180px;
+}
+
+.help-search-panel {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    padding: 14px 16px;
+    border: 1px solid #dce6df;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 12px 24px rgba(23, 53, 34, .04);
+}
+
+.help-search-panel svg {
+    width: 19px;
+    color: #65746b;
+}
+
+.help-search-panel input {
+    flex: 1;
+    border: 0;
+    outline: 0;
+    color: var(--ink);
+    background: transparent;
+    font: inherit;
+}
+
+.help-category-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px;
+    margin-bottom: 22px;
+}
+
+.help-category-tabs a {
+    padding: 8px 12px;
+    border: 1px solid #dce6df;
+    border-radius: 999px;
+    color: var(--forest-dark);
+    background: #fff;
+    font-size: 12px;
+    font-weight: 850;
+}
+
+.help-section {
+    margin-top: 22px;
+}
+
+.section-heading-row.no-padding {
+    padding: 0;
+    margin-bottom: 12px;
+}
+
+.faq-groups {
+    display: grid;
+    gap: 16px;
+}
+
+.faq-group,
+.guideline-card {
+    border: 1px solid #dce4df;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 14px 30px rgba(23, 53, 34, .045);
+}
+
+.faq-group {
+    padding: 18px;
+}
+
+.faq-card {
+    margin-top: 10px;
+    border: 1px solid #edf2ee;
+    border-radius: 14px;
+    background: #fbfcfb;
+    overflow: hidden;
+}
+
+.faq-card summary {
+    padding: 15px 16px;
+    color: var(--forest-dark);
+    cursor: pointer;
+    font-weight: 850;
+}
+
+.faq-card summary::marker {
+    color: var(--forest);
+}
+
+.faq-card p {
+    margin: 0;
+    padding: 0 16px 16px 34px;
+    color: #53635a;
+    line-height: 1.6;
+}
+
+.guideline-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.guideline-card {
+    padding: 20px;
+}
+
+.guideline-card > span {
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    margin-bottom: 12px;
+    border-radius: 13px;
+    color: var(--forest);
+    background: #e7f6ec;
+}
+
+.guideline-card h3 {
+    margin-bottom: 12px;
+    color: var(--forest-dark);
+}
+
+.guideline-card ul {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+    padding-left: 18px;
+    color: #53635a;
+    line-height: 1.5;
+}
+
 .pagination-wrap {
     margin-top: 18px;
 }
@@ -3061,6 +3195,10 @@ body:has(.saas-dashboard) .saas-topbar-actions {
 
 @media (max-width: 720px) {
     .po-demo-timeline {
+        grid-template-columns: 1fr;
+    }
+
+    .guideline-grid {
         grid-template-columns: 1fr;
     }
 

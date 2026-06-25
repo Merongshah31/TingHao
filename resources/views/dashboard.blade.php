@@ -106,13 +106,18 @@
                     <a href="{{ route('reports.index') }}">{{ __('messages.reports') }}</a>
                 </x-dashboard.action-card>
 
-                <x-dashboard.action-card icon="send" :eyebrow="__('messages.purchase_order_demo')" :title="__('messages.purchase_order_demo')" :description="__('messages.purchase_order_demo_dashboard')">
+                <x-dashboard.action-card icon="send" :eyebrow="__('messages.purchase_orders')" :title="__('messages.purchase_orders')" :description="__('messages.purchase_order_demo_dashboard')">
                     <a href="{{ route('po-demo.index') }}">{{ __('messages.open_demo_workflow') }} <i data-lucide="arrow-right"></i></a>
                     @if (auth()->user()->isAdmin())
                         <a href="{{ route('po-demo.create') }}">{{ __('messages.create_demo_po') }}</a>
                     @else
                         <a href="{{ route('po-demo.index') }}">{{ __('messages.view') }}</a>
                     @endif
+                </x-dashboard.action-card>
+
+                <x-dashboard.action-card icon="circle-help" :eyebrow="__('messages.help_center')" :title="__('messages.faq_guidelines')" :description="__('messages.help_center_dashboard')">
+                    <a href="{{ route('help-center.index') }}">{{ __('messages.open_help_center') }} <i data-lucide="arrow-right"></i></a>
+                    <a href="{{ route('help-center.index') }}">{{ __('messages.guidelines') }}</a>
                 </x-dashboard.action-card>
 
                 <x-dashboard.action-card icon="brain-circuit" :eyebrow="__('messages.stock_planning_calendar')" :title="__('messages.smart_stock_memory_planner')" :description="__('messages.calendar_stock_demo')">

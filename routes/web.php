@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExpiryController;
+use App\Http\Controllers\HelpCenterController;
 use App\Http\Controllers\IngredientController;
 use App\Http\Controllers\LowStockController;
 use App\Http\Controllers\PurchaseOrderController;
@@ -65,6 +66,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/stock-memory-demo', [StockMemoryDemoController::class, 'index'])
         ->middleware('role:admin,staff')
         ->name('stock-memory.demo');
+    Route::get('/help-center', [HelpCenterController::class, 'index'])
+        ->middleware('role:admin,staff')
+        ->name('help-center.index');
     Route::get('/inventory/{ingredient}/stock/{type}', [StockMovementController::class, 'create'])
         ->middleware('role:admin,staff')
         ->name('stock.create');
