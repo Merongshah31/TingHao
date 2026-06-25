@@ -5,7 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Ingredient;
 use App\Models\StockMovement;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Carbon;
 use Illuminate\View\View;
 
 class ReportController extends Controller
@@ -90,13 +94,39 @@ class ReportController extends Controller
 
     public function generatedSummary(): View
     {
-        return view('reports.generated-summary', [
+        return view('reports.generated-summary', array_merge($this->generatedSummaryData(), [
             'title' => 'Ting Hao | Generated Summary Report',
+            'recentMovements' => StockMovement::with(['ingredient', 'creator'])->latest()->take(15)->get(),
+        ]));
+    }
+
+    public function downloadGeneratedSummaryPdf(): Response
+    {
+        $data = $this->generatedSummaryData();
+        $filename = 'inventory-summary-'.$data['generatedAt']->format('Y-m-d-Hi').'.pdf';
+
+        return Pdf::loadView('reports.pdf.generated-summary', $data)
+            ->setPaper('a4', 'portrait')
+            ->download($filename);
+    }
+
+    /**
+     * @return array{
+     *     generatedAt: Carbon,
+     *     totalIngredients: int,
+     *     totalCategories: int,
+     *     lowStockIngredients: Collection<int, Ingredient>,
+     *     expiredIngredients: Collection<int, Ingredient>
+     * }
+     */
+    private function generatedSummaryData(): array
+    {
+        return [
+            'generatedAt' => now(),
             'totalIngredients' => Ingredient::count(),
             'totalCategories' => Category::count(),
             'lowStockIngredients' => Ingredient::with('category')->lowStock()->orderBy('name')->get(),
             'expiredIngredients' => Ingredient::with('category')->expired()->orderBy('expiry_date')->get(),
-            'recentMovements' => StockMovement::with(['ingredient', 'creator'])->latest()->take(15)->get(),
-        ]);
+        ];
     }
 }

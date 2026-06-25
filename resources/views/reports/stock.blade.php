@@ -5,37 +5,37 @@
     <section class="page-shell">
         <div class="page-heading">
             <div>
-                <p class="eyebrow">REPORTS & ANALYTICS</p>
-                <h1>Stock Movement Report</h1>
+                <p class="eyebrow">{{ __('messages.reports') }}</p>
+                <h1>{{ __('messages.stock_movement_report') }}</h1>
             </div>
             <div class="page-actions">
-                <a href="{{ route('reports.index') }}" class="btn btn-muted">Reports</a>
+                <a href="{{ route('reports.index') }}" class="btn btn-muted">{{ __('messages.reports') }}</a>
             </div>
         </div>
 
         <form class="filter-bar report-filter-bar" method="get" action="{{ route('reports.stock') }}">
             <select name="type">
-                <option value="">All movements</option>
-                <option value="in" @selected($selectedType === 'in')>Stock In</option>
-                <option value="out" @selected($selectedType === 'out')>Stock Out</option>
+                <option value="">{{ __('messages.all_movements') }}</option>
+                <option value="in" @selected($selectedType === 'in')>{{ __('messages.stock_in') }}</option>
+                <option value="out" @selected($selectedType === 'out')>{{ __('messages.stock_out') }}</option>
             </select>
             <input name="from" value="{{ $from }}" type="date">
             <input name="to" value="{{ $to }}" type="date">
-            <button type="submit" class="btn btn-primary">Filter</button>
-            <a href="{{ route('reports.stock') }}" class="btn btn-muted">Reset</a>
+            <button type="submit" class="btn btn-primary">{{ __('messages.filter') }}</button>
+            <a href="{{ route('reports.stock') }}" class="btn btn-muted">{{ __('messages.reset') }}</a>
         </form>
 
         <div class="table-card">
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Date</th>
-                        <th>Ingredient</th>
-                        <th>Type</th>
-                        <th>Quantity</th>
-                        <th>Before</th>
-                        <th>After</th>
-                        <th>Recorded By</th>
+                        <th>{{ __('messages.date') }}</th>
+                        <th>{{ __('messages.ingredient') }}</th>
+                        <th>{{ __('messages.type') }}</th>
+                        <th>{{ __('messages.quantity') }}</th>
+                        <th>{{ __('messages.before') }}</th>
+                        <th>{{ __('messages.after') }}</th>
+                        <th>{{ __('messages.recorded_by') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -51,10 +51,10 @@
                             <td>{{ $movement->quantity }} {{ $movement->ingredient->unit }}</td>
                             <td>{{ $movement->quantity_before }} {{ $movement->ingredient->unit }}</td>
                             <td>{{ $movement->quantity_after }} {{ $movement->ingredient->unit }}</td>
-                            <td>{{ $movement->creator?->name ?? 'Unknown' }}</td>
+                            <td>{{ $movement->creator?->name ?? __('messages.unknown') }}</td>
                         </tr>
                     @empty
-                        <tr><td colspan="7" class="empty-state">No stock movement data found.</td></tr>
+                        <tr><td colspan="7" class="empty-state">{{ __('messages.no_stock_movement_data') }}</td></tr>
                     @endforelse
                 </tbody>
             </table>

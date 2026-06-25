@@ -5,43 +5,43 @@
     <section class="page-shell">
         <div class="page-heading">
             <div>
-                <p class="eyebrow">REPORTS & ANALYTICS</p>
-                <h1>Reports Dashboard</h1>
-                <p>Review inventory condition, stock movement, low-stock items, and expiry risk.</p>
+                <p class="eyebrow">{{ __('messages.reports') }}</p>
+                <h1>{{ __('messages.reports_dashboard') }}</h1>
+                <p>{{ __('messages.reports_intro') }}</p>
             </div>
             <div class="page-actions">
-                <a href="{{ route('dashboard') }}" class="btn btn-muted">Dashboard</a>
+                <a href="{{ route('dashboard') }}" class="btn btn-muted">{{ __('messages.dashboard') }}</a>
                 @if (auth()->user()->isAdmin())
-                    <a href="{{ route('reports.generated-summary') }}" class="btn btn-primary">Generate Report</a>
+                    <a href="{{ route('reports.generated-summary') }}" class="btn btn-primary">{{ __('messages.generate_report') }}</a>
                 @endif
             </div>
         </div>
 
         <div class="report-metrics">
-            <article><span>Total Ingredients</span><strong>{{ $totalIngredients }}</strong></article>
-            <article><span>Low Stock</span><strong>{{ $lowStockCount }}</strong></article>
-            <article><span>Expiring Soon</span><strong>{{ $expiringCount }}</strong></article>
-            <article><span>Expired</span><strong>{{ $expiredCount }}</strong></article>
-            <article><span>Stock In Records</span><strong>{{ $stockInCount }}</strong></article>
-            <article><span>Stock Out Records</span><strong>{{ $stockOutCount }}</strong></article>
+            <article><span>{{ __('messages.total_ingredients') }}</span><strong>{{ $totalIngredients }}</strong></article>
+            <article><span>{{ __('messages.low_stock') }}</span><strong>{{ $lowStockCount }}</strong></article>
+            <article><span>{{ __('messages.expiring_soon') }}</span><strong>{{ $expiringCount }}</strong></article>
+            <article><span>{{ __('messages.expired') }}</span><strong>{{ $expiredCount }}</strong></article>
+            <article><span>{{ __('messages.stock_in') }}</span><strong>{{ $stockInCount }}</strong></article>
+            <article><span>{{ __('messages.stock_out') }}</span><strong>{{ $stockOutCount }}</strong></article>
         </div>
 
         <div class="report-grid">
             <a href="{{ route('reports.inventory') }}">
-                <strong>Inventory Report</strong>
-                <span>Ingredient list, suppliers, quantities, and stock status.</span>
+                <strong>{{ __('messages.inventory_report') }}</strong>
+                <span>{{ __('messages.inventory_intro') }}</span>
             </a>
             <a href="{{ route('reports.stock') }}">
-                <strong>Stock Movement Report</strong>
-                <span>Stock-in and stock-out records with date filters.</span>
+                <strong>{{ __('messages.stock_movement_report') }}</strong>
+                <span>{{ __('messages.stock_intro') }}</span>
             </a>
             <a href="{{ route('reports.low-stock') }}">
-                <strong>Low Stock Report</strong>
-                <span>Items at or below minimum stock level.</span>
+                <strong>{{ __('messages.low_stock_report') }}</strong>
+                <span>{{ __('messages.low_stock_intro') }}</span>
             </a>
             <a href="{{ route('reports.expiry') }}">
-                <strong>Expiry Report</strong>
-                <span>Expiring soon and expired ingredients.</span>
+                <strong>{{ __('messages.expiry_report') }}</strong>
+                <span>{{ __('messages.expiry_intro') }}</span>
             </a>
         </div>
     </section>

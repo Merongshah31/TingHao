@@ -5,12 +5,12 @@
     <section class="page-shell">
         <div class="page-heading">
             <div>
-                <p class="eyebrow">STOCK CONTROL</p>
-                <h1>Record {{ $typeLabel }}</h1>
+                <p class="eyebrow">{{ __('messages.stock_movement') }}</p>
+                <h1>{{ __('messages.record') }} {{ $typeLabel }}</h1>
                 <p>{{ $ingredient->name }} currently has {{ $ingredient->quantity }} {{ $ingredient->unit }} available.</p>
             </div>
             <div class="page-actions">
-                <a href="{{ route('inventory.show', $ingredient) }}" class="btn btn-muted">Back</a>
+                <a href="{{ route('inventory.show', $ingredient) }}" class="btn btn-muted">{{ __('messages.back') }}</a>
             </div>
         </div>
 
@@ -21,7 +21,7 @@
         <form class="panel-form" action="{{ route('stock.store', [$ingredient, $type]) }}" method="post">
             @csrf
             <div class="stock-summary-card">
-                <span>Current Stock</span>
+                <span>{{ __('messages.current_stock') }}</span>
                 <strong>{{ $ingredient->quantity }} {{ $ingredient->unit }}</strong>
             </div>
 
@@ -33,21 +33,21 @@
                 </label>
 
                 <label>
-                    <span>Reason</span>
+                    <span>{{ __('messages.reason') }}</span>
                     <input name="reason" value="{{ old('reason') }}" type="text" placeholder="{{ $type === 'in' ? 'Supplier delivery' : 'Production usage' }}">
                     @error('reason') <small>{{ $message }}</small> @enderror
                 </label>
 
                 <label class="form-wide">
-                    <span>Notes</span>
+                    <span>{{ __('messages.notes') }}</span>
                     <textarea name="notes" rows="4">{{ old('notes') }}</textarea>
                     @error('notes') <small>{{ $message }}</small> @enderror
                 </label>
             </div>
 
             <div class="form-actions">
-                <a href="{{ route('inventory.show', $ingredient) }}" class="btn btn-muted">Cancel</a>
-                <button type="submit" class="btn btn-primary">Record {{ $typeLabel }}</button>
+                <a href="{{ route('inventory.show', $ingredient) }}" class="btn btn-muted">{{ __('messages.cancel') }}</a>
+                <button type="submit" class="btn btn-primary">{{ __('messages.record') }} {{ $typeLabel }}</button>
             </div>
         </form>
     </section>

@@ -5,13 +5,13 @@
     <section class="page-shell">
         <div class="page-heading">
             <div>
-                <p class="eyebrow">LOW STOCK ALERT</p>
-                <h1>Low Stock Notification</h1>
-                <p>Ingredients shown here are at or below their minimum stock level.</p>
+                <p class="eyebrow">{{ __('messages.low_stock_alert') }}</p>
+                <h1>{{ __('messages.low_stock_notification') }}</h1>
+                <p>{{ __('messages.low_stock_intro') }}</p>
             </div>
             <div class="page-actions">
-                <a href="{{ route('dashboard') }}" class="btn btn-muted">Dashboard</a>
-                <a href="{{ route('inventory.index') }}" class="btn btn-primary">Inventory</a>
+                <a href="{{ route('dashboard') }}" class="btn btn-muted">{{ __('messages.dashboard') }}</a>
+                <a href="{{ route('inventory.index') }}" class="btn btn-primary">{{ __('messages.inventory') }}</a>
             </div>
         </div>
 
@@ -23,11 +23,11 @@
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Ingredient</th>
-                        <th>Quantity</th>
-                        <th>Minimum</th>
-                        <th>Restock Status</th>
-                        <th>Action</th>
+                        <th>{{ __('messages.ingredient') }}</th>
+                        <th>{{ __('messages.quantity') }}</th>
+                        <th>{{ __('messages.low_stock') }}</th>
+                        <th>{{ __('messages.restock') }}</th>
+                        <th>{{ __('messages.action') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -38,7 +38,7 @@
                         <tr>
                             <td>
                                 <strong>{{ $ingredient->name }}</strong>
-                                <span>{{ $ingredient->category?->name ?? 'Uncategorized' }}</span>
+                                <span>{{ $ingredient->category?->name ?? __('messages.uncategorized') }}</span>
                             </td>
                             <td>{{ $ingredient->quantity }} {{ $ingredient->unit }}</td>
                             <td>{{ $ingredient->minimum_stock }} {{ $ingredient->unit }}</td>
@@ -48,28 +48,28 @@
                                         {{ $latestRestock->statusLabel() }}
                                     </span>
                                 @else
-                                    <span class="status-pill danger">Needs Request</span>
+                                    <span class="status-pill danger">{{ __('messages.needs_request') }}</span>
                                 @endif
                             </td>
                             <td class="table-actions stacked-actions">
-                                <a href="{{ route('inventory.show', $ingredient) }}">View</a>
+                                <a href="{{ route('inventory.show', $ingredient) }}">{{ __('messages.view') }}</a>
                                 @if (auth()->user()->isAdmin())
                                     @if ($latestRestock)
                                         <form action="{{ route('alerts.restock.update', $latestRestock) }}" method="post">
                                             @csrf
                                             @method('PATCH')
                                             <select name="status">
-                                                <option value="requested" @selected($latestRestock->status === 'requested')>Requested</option>
-                                                <option value="ordered" @selected($latestRestock->status === 'ordered')>Ordered</option>
-                                                <option value="completed" @selected($latestRestock->status === 'completed')>Completed</option>
+                                                <option value="requested" @selected($latestRestock->status === 'requested')>{{ __('messages.requested') }}</option>
+                                                <option value="ordered" @selected($latestRestock->status === 'ordered')>{{ __('messages.ordered') }}</option>
+                                                <option value="completed" @selected($latestRestock->status === 'completed')>{{ __('messages.completed') }}</option>
                                             </select>
-                                            <button type="submit">Update</button>
+                                            <button type="submit">{{ __('messages.update') }}</button>
                                         </form>
                                     @else
                                         <form action="{{ route('alerts.restock.request', $ingredient) }}" method="post">
                                             @csrf
                                             <input name="notes" type="hidden" value="Created from low-stock alert.">
-                                            <button type="submit">Request Restock</button>
+                                            <button type="submit">{{ __('messages.request_restock') }}</button>
                                         </form>
                                     @endif
                                 @endif
@@ -77,7 +77,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="empty-state">No low-stock ingredients right now.</td>
+                            <td colspan="5" class="empty-state">{{ __('messages.no_low_stock_ingredients') }}</td>
                         </tr>
                     @endforelse
                 </tbody>

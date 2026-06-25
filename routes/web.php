@@ -6,6 +6,7 @@ use App\Http\Controllers\ExpiryController;
 use App\Http\Controllers\IngredientController;
 use App\Http\Controllers\LowStockController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\StockMemoryDemoController;
 use App\Http\Controllers\StockMovementController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\SystemController;
@@ -14,6 +15,17 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('home', ['title' => 'Ting Hao | Baking Ingredient Supplier']);
 })->name('home');
+
+Route::get('/language/{locale}', function (string $locale) {
+    if (! in_array($locale, ['en', 'zh_CN'], true)) {
+        $locale = 'en';
+    }
+
+    session(['locale' => $locale]);
+    app()->setLocale($locale);
+
+    return back();
+})->name('language.switch');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'create'])->name('login');
@@ -48,6 +60,9 @@ Route::middleware('auth')->group(function () {
         ->name('inventory.destroy');
 
     Route::get('/stock/history', [StockMovementController::class, 'index'])->name('stock.index');
+    Route::get('/stock-memory-demo', [StockMemoryDemoController::class, 'index'])
+        ->middleware('role:admin,staff')
+        ->name('stock-memory.demo');
     Route::get('/inventory/{ingredient}/stock/{type}', [StockMovementController::class, 'create'])
         ->middleware('role:admin,staff')
         ->name('stock.create');
@@ -91,12 +106,17 @@ Route::middleware('auth')->group(function () {
     Route::get('/reports/generated-summary', [ReportController::class, 'generatedSummary'])
         ->middleware('role:admin')
         ->name('reports.generated-summary');
+    Route::get('/reports/generated-summary/pdf', [ReportController::class, 'downloadGeneratedSummaryPdf'])
+        ->middleware('role:admin')
+        ->name('reports.generated-summary.pdf');
 
     Route::middleware('role:admin')->group(function () {
         Route::get('/system/settings', [SystemController::class, 'settings'])->name('system.settings');
         Route::put('/system/settings', [SystemController::class, 'updateSettings'])->name('system.settings.update');
         Route::get('/system/backups', [SystemController::class, 'backups'])->name('system.backups');
         Route::post('/system/backups', [SystemController::class, 'createBackup'])->name('system.backups.create');
+        Route::post('/system/backups/cleanup', [SystemController::class, 'cleanupBackups'])->name('system.backups.cleanup');
+        Route::delete('/system/backups/{backupRecord}', [SystemController::class, 'destroyBackup'])->name('system.backups.destroy');
     });
 
     Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');

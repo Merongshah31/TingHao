@@ -5,13 +5,13 @@
     <section class="page-shell">
         <div class="page-heading">
             <div>
-                <p class="eyebrow">EXPIRY DATE TRACKING</p>
-                <h1>{{ $filter === 'expired' ? 'Expired Items' : 'Expiring Soon' }}</h1>
-                <p>Track ingredients with expiry dates within 30 days or already past their expiry date.</p>
+                <p class="eyebrow">{{ __('messages.expiry_date_tracking') }}</p>
+                <h1>{{ $filter === 'expired' ? __('messages.expired_items') : __('messages.expiring_soon') }}</h1>
+                <p>{{ __('messages.expiry_intro') }}</p>
             </div>
             <div class="page-actions">
-                <a href="{{ route('dashboard') }}" class="btn btn-muted">Dashboard</a>
-                <a href="{{ route('inventory.index') }}" class="btn btn-primary">Inventory</a>
+                <a href="{{ route('dashboard') }}" class="btn btn-muted">{{ __('messages.dashboard') }}</a>
+                <a href="{{ route('inventory.index') }}" class="btn btn-primary">{{ __('messages.inventory') }}</a>
             </div>
         </div>
 
@@ -20,20 +20,20 @@
         @endif
 
         <div class="segmented-actions">
-            <a href="{{ route('expiry.index', ['filter' => 'expiring']) }}" class="{{ $filter !== 'expired' ? 'active' : '' }}">Expiring Soon</a>
-            <a href="{{ route('expiry.index', ['filter' => 'expired']) }}" class="{{ $filter === 'expired' ? 'active' : '' }}">Expired</a>
+            <a href="{{ route('expiry.index', ['filter' => 'expiring']) }}" class="{{ $filter !== 'expired' ? 'active' : '' }}">{{ __('messages.expiring_soon') }}</a>
+            <a href="{{ route('expiry.index', ['filter' => 'expired']) }}" class="{{ $filter === 'expired' ? 'active' : '' }}">{{ __('messages.expired') }}</a>
         </div>
 
         <div class="table-card">
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Ingredient</th>
-                        <th>Category</th>
-                        <th>Quantity</th>
-                        <th>Expiry Date</th>
-                        <th>Status</th>
-                        <th>Action</th>
+                        <th>{{ __('messages.ingredient') }}</th>
+                        <th>{{ __('messages.category') }}</th>
+                        <th>{{ __('messages.quantity') }}</th>
+                        <th>{{ __('messages.expiry_date') }}</th>
+                        <th>{{ __('messages.status') }}</th>
+                        <th>{{ __('messages.action') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -44,29 +44,29 @@
                         <tr>
                             <td>
                                 <strong>{{ $ingredient->name }}</strong>
-                                <span>{{ $ingredient->sku ?: 'No SKU' }}</span>
+                                <span>{{ $ingredient->sku ?: __('messages.no_sku') }}</span>
                             </td>
-                            <td>{{ $ingredient->category?->name ?? 'Uncategorized' }}</td>
+                            <td>{{ $ingredient->category?->name ?? __('messages.uncategorized') }}</td>
                             <td>{{ $ingredient->quantity }} {{ $ingredient->unit }}</td>
                             <td>{{ $ingredient->expiry_date?->format('d M Y') }}</td>
                             <td>
                                 <span class="status-pill {{ $isExpired ? 'danger' : 'warning' }}">
-                                    {{ $isExpired ? 'Expired' : 'Expiring Soon' }}
+                                    {{ $isExpired ? __('messages.expired') : __('messages.expiring_soon') }}
                                 </span>
                             </td>
                             <td class="table-actions stacked-actions">
-                                <a href="{{ route('inventory.show', $ingredient) }}">View</a>
+                                <a href="{{ route('inventory.show', $ingredient) }}">{{ __('messages.view') }}</a>
                                 @if (auth()->user()->isAdmin() && $isExpired && (float) $ingredient->quantity > 0)
                                     <form action="{{ route('expiry.remove', $ingredient) }}" method="post">
                                         @csrf
-                                        <button type="submit">Remove Stock</button>
+                                        <button type="submit">{{ __('messages.stock_out') }}</button>
                                     </form>
                                 @endif
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="empty-state">No ingredients found for this expiry filter.</td>
+                            <td colspan="6" class="empty-state">{{ __('messages.no_ingredients_found') }}</td>
                         </tr>
                     @endforelse
                 </tbody>

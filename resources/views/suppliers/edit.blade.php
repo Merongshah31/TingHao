@@ -5,14 +5,14 @@
     <section class="page-shell">
         <div class="page-heading">
             <div>
-                <p class="eyebrow">SUPPLIER MANAGEMENT</p>
-                <h1>Edit Supplier</h1>
+                <p class="eyebrow">{{ __('messages.supplier_management') }}</p>
+                <h1>{{ __('messages.edit_supplier') }}</h1>
             </div>
         </div>
 
         <form class="panel-form" action="{{ route('suppliers.update', $supplier) }}" method="post">
             @method('PUT')
-            @include('suppliers._form', ['buttonLabel' => 'Save Changes'])
+            @include('suppliers._form', ['buttonLabel' => __('messages.save_changes')])
         </form>
     </section>
 </main>

@@ -55,6 +55,7 @@ class SystemController extends Controller
         return view('system.backups', [
             'title' => 'Ting Hao | Backup System Data',
             'backups' => BackupRecord::with('creator')->latest()->paginate(10),
+            'backupCount' => BackupRecord::count(),
         ]);
     }
 
@@ -78,6 +79,45 @@ class SystemController extends Controller
             'created_by' => $request->user()->id,
         ]);
 
-        return back()->with('status', 'Backup snapshot recorded.');
+        $this->pruneOldBackups(50);
+
+        return back()->with('status', __('messages.backup_snapshot_recorded'));
+    }
+
+    public function destroyBackup(BackupRecord $backupRecord): RedirectResponse
+    {
+        $backupRecord->delete();
+
+        return redirect()
+            ->route('system.backups')
+            ->with('status', __('messages.backup_deleted_successfully'));
+    }
+
+    public function cleanupBackups(): RedirectResponse
+    {
+        $deletedCount = $this->pruneOldBackups(10);
+
+        return redirect()
+            ->route('system.backups')
+            ->with('status', __('messages.old_backup_snapshots_cleaned_successfully', [
+                'count' => $deletedCount,
+            ]));
+    }
+
+    private function pruneOldBackups(int $keepLatest): int
+    {
+        $keepIds = BackupRecord::query()
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->limit($keepLatest)
+            ->pluck('id');
+
+        if ($keepIds->isEmpty()) {
+            return 0;
+        }
+
+        return BackupRecord::query()
+            ->whereNotIn('id', $keepIds)
+            ->delete();
     }
 }

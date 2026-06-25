@@ -25,9 +25,9 @@ class DashboardController extends Controller
     public function admin(): View
     {
         return view('dashboard', [
-            'title' => 'Ting Hao | Admin Dashboard',
-            'dashboardRole' => 'Admin',
-            'dashboardIntro' => 'Full system control for accounts, inventory, suppliers, reports, backup, and settings.',
+            'title' => 'Ting Hao | '.__('messages.admin_dashboard'),
+            'dashboardRole' => __('messages.admin'),
+            'dashboardIntro' => __('messages.full_system_control'),
             'dashboardItems' => [
                 'Create and manage user accounts',
                 'Manage ingredient records',
@@ -42,9 +42,9 @@ class DashboardController extends Controller
     public function staff(): View
     {
         return view('dashboard', [
-            'title' => 'Ting Hao | Staff Dashboard',
-            'dashboardRole' => 'Staff',
-            'dashboardIntro' => 'Daily operation access for inventory viewing, stock movement, alerts, suppliers, and reports.',
+            'title' => 'Ting Hao | '.__('messages.staff_dashboard'),
+            'dashboardRole' => __('messages.staff'),
+            'dashboardIntro' => __('messages.welcome_staff'),
             'dashboardItems' => [
                 'View inventory and add ingredients',
                 'Record stock in and stock out',
@@ -63,34 +63,48 @@ class DashboardController extends Controller
     {
         return [
             [
-                'label' => 'Ingredients',
+                'label' => __('messages.total_items'),
                 'value' => Ingredient::count(),
-                'hint' => 'Total active records',
+                'hint' => __('messages.total_active_records'),
+                'icon' => 'package-2',
+                'tone' => 'green',
             ],
             [
-                'label' => 'Low Stock',
+                'label' => __('messages.low_stock'),
                 'value' => Ingredient::lowStock()->count(),
-                'hint' => 'Needs attention',
+                'hint' => __('messages.needs_attention'),
+                'icon' => 'triangle-alert',
+                'tone' => 'amber',
             ],
             [
-                'label' => 'Expiring',
+                'label' => __('messages.expiring'),
                 'value' => Ingredient::expiringWithin(30)->count(),
-                'hint' => 'Within 30 days',
+                'hint' => __('messages.within_30_days'),
+                'icon' => 'calendar-clock',
+                'tone' => 'red',
             ],
             [
-                'label' => 'Suppliers',
+                'label' => __('messages.suppliers'),
                 'value' => Supplier::count(),
-                'hint' => 'Source records',
+                'hint' => __('messages.approved_partners'),
+                'icon' => 'truck',
+                'tone' => 'blue',
             ],
             [
-                'label' => 'Movements',
+                'label' => __('messages.movements'),
                 'value' => StockMovement::count(),
-                'hint' => 'Stock ledger entries',
+                'hint' => __('messages.stock_ledger_entries'),
+                'icon' => 'arrow-left-right',
+                'tone' => 'violet',
             ],
             [
-                'label' => 'Restock',
-                'value' => RestockRequest::where('status', '!=', RestockRequest::STATUS_COMPLETED)->count(),
-                'hint' => 'Open requests',
+                'label' => __('messages.records'),
+                'value' => Ingredient::count() + Supplier::count() + StockMovement::count(),
+                'hint' => __('messages.records_count', [
+                    'count' => RestockRequest::where('status', '!=', RestockRequest::STATUS_COMPLETED)->count(),
+                ]),
+                'icon' => 'database',
+                'tone' => 'slate',
             ],
         ];
     }
@@ -131,7 +145,7 @@ class DashboardController extends Controller
     }
 
     /**
-     * @param Collection<int, Ingredient> $ingredients
+     * @param  Collection<int, Ingredient>  $ingredients
      * @return array<int, array<string, string|float>>
      */
     private function lowStockItems(Collection $ingredients): array

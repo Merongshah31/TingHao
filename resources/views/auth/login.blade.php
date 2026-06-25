@@ -5,17 +5,17 @@
     <section class="login-shell">
         <aside class="login-art" style="background-image:url('https://images.unsplash.com/photo-1608198093002-ad4e005484ec?auto=format&fit=crop&w=1000&q=80')">
             <div>
-                <h2>Mastering the Craft of Inventory</h2>
-                <p>Precision in every batch, from raw ingredients to the final artisanal loaf.</p>
+                <h2>{{ __('messages.login_art_title') }}</h2>
+                <p>{{ __('messages.login_art_copy') }}</p>
             </div>
         </aside>
 
         <section class="login-panel">
             <div class="logo">Ting Hao</div>
-            <p class="sub-logo">Access the Artisanal Ledger</p>
+            <p class="sub-logo">{{ __('messages.login_sub_logo') }}</p>
 
-            <h1>Welcome Back</h1>
-            <p class="panel-copy">Please enter your credentials to manage the bakery ecosystem.</p>
+            <h1>{{ __('messages.welcome_back') }}</h1>
+            <p class="panel-copy">{{ __('messages.login_copy') }}</p>
 
             @if ($errors->any())
                 <div class="form-alert">
@@ -25,28 +25,28 @@
 
             <form class="login-form" action="{{ route('login.store') }}" method="post">
                 @csrf
-                <label for="email">Email Address</label>
+                <label for="email">{{ __('messages.email_address') }}</label>
                 <div class="field-wrap">
                     <input id="email" name="email" type="email" value="{{ old('email') }}" placeholder="admin@tinghao.com" required>
                 </div>
 
-                <label for="password">Password</label>
+                <label for="password">{{ __('messages.password') }}</label>
                 <div class="field-wrap">
                     <input id="password" name="password" type="password" placeholder="........" required>
                 </div>
 
                 <div class="row-between">
-                    <label class="remember"><input type="checkbox" name="remember"> Remember Me</label>
-                    <a href="#">Forgot Password?</a>
+                    <label class="remember"><input type="checkbox" name="remember"> {{ __('messages.remember_me') }}</label>
+                    <a href="#">{{ __('messages.forgot_password') }}</a>
                 </div>
 
-                <button type="submit" class="btn btn-primary full">Sign In</button>
+                <button type="submit" class="btn btn-primary full">{{ __('messages.sign_in') }}</button>
             </form>
 
             <div class="panel-footer">
-                <span>Encrypted Connection</span>
-                <a href="#">Privacy Policy</a>
-                <a href="#">System Support</a>
+                <span>{{ __('messages.encrypted_connection') }}</span>
+                <a href="#">{{ __('messages.privacy_policy') }}</a>
+                <a href="#">{{ __('messages.system_support') }}</a>
             </div>
         </section>
     </section>

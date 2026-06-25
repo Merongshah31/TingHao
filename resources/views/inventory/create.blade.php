@@ -5,13 +5,13 @@
     <section class="page-shell">
         <div class="page-heading">
             <div>
-                <p class="eyebrow">INVENTORY</p>
-                <h1>Add Ingredient</h1>
+                <p class="eyebrow">{{ __('messages.inventory') }}</p>
+                <h1>{{ __('messages.add_ingredient') }}</h1>
             </div>
         </div>
 
         <form class="panel-form" action="{{ route('inventory.store') }}" method="post">
-            @include('inventory._form', ['buttonLabel' => 'Add Ingredient'])
+            @include('inventory._form', ['buttonLabel' => __('messages.add_ingredient')])
         </form>
     </section>
 </main>
