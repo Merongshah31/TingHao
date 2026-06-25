@@ -1167,6 +1167,16 @@ a {
     font-weight: 700;
 }
 
+.error-alert {
+    border: 1px solid #f0b9b9;
+    border-radius: 10px;
+    background: #fff0f0;
+    color: #9d2626;
+    padding: 12px 14px;
+    margin-bottom: 18px;
+    font-weight: 700;
+}
+
 .filter-bar {
     display: grid;
     grid-template-columns: minmax(220px, 1fr) 220px auto auto;
@@ -1361,6 +1371,42 @@ a {
 .status-pill.warning {
     background: #fff8d8;
     color: #83620a;
+}
+
+.po-status-draft { background: #edf1ee; color: #5c6861; }
+.po-status-sent { background: #e6f3fb; color: #1f648f; }
+.po-status-confirmed,
+.po-status-received { background: #e8f6ec; color: #1e6934; }
+.po-status-partially_received { background: #fff3d8; color: #9b6414; }
+.po-status-closed { background: #e8ece9; color: #243329; }
+.po-status-cancelled { background: #fde8e8; color: #a12c2c; }
+
+.purchase-order-form {
+    display: grid;
+    gap: 18px;
+}
+
+.po-items-card {
+    border: 1px solid #e5e5e2;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.po-items-table-wrap {
+    overflow-x: auto;
+}
+
+.po-items-table {
+    min-width: 760px;
+}
+
+.po-items-table th,
+.po-items-table td {
+    vertical-align: top;
+}
+
+.po-summary-panel {
+    margin-bottom: 18px;
 }
 
 .pagination-wrap {

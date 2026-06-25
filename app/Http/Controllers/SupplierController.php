@@ -56,7 +56,10 @@ class SupplierController extends Controller
     {
         return view('suppliers.show', [
             'title' => "Ting Hao | {$supplier->name}",
-            'supplier' => $supplier->load(['ingredients.category']),
+            'supplier' => $supplier->load([
+                'ingredients.category',
+                'purchaseOrders' => fn ($query) => $query->latest()->take(5),
+            ]),
         ]);
     }
 

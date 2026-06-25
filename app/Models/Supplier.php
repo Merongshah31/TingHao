@@ -23,4 +23,9 @@ class Supplier extends Model
     {
         return $this->hasMany(Ingredient::class);
     }
+
+    public function purchaseOrders(): HasMany
+    {
+        return $this->hasMany(PurchaseOrder::class);
+    }
 }

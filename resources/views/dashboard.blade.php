@@ -106,6 +106,15 @@
                     <a href="{{ route('reports.index') }}">{{ __('messages.reports') }}</a>
                 </x-dashboard.action-card>
 
+                <x-dashboard.action-card icon="clipboard-list" :eyebrow="__('messages.supplier_management')" :title="__('messages.purchase_orders')" :description="__('messages.purchase_orders_dashboard')">
+                    <a href="{{ route('purchase-orders.index') }}">{{ __('messages.purchase_orders') }} <i data-lucide="arrow-right"></i></a>
+                    @if (auth()->user()->isAdmin())
+                        <a href="{{ route('purchase-orders.create') }}">{{ __('messages.create_purchase_order') }}</a>
+                    @else
+                        <a href="{{ route('suppliers.index') }}">{{ __('messages.suppliers') }}</a>
+                    @endif
+                </x-dashboard.action-card>
+
                 <x-dashboard.action-card icon="brain-circuit" :eyebrow="__('messages.stock_planning_calendar')" :title="__('messages.smart_stock_memory_planner')" :description="__('messages.calendar_stock_demo')">
                     <a href="{{ route('stock-memory.demo') }}">{{ __('messages.open_planner') }} <i data-lucide="arrow-right"></i></a>
                     <a href="{{ route('inventory.index') }}">{{ __('messages.view_inventory') }}</a>

@@ -5,6 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExpiryController;
 use App\Http\Controllers\IngredientController;
 use App\Http\Controllers\LowStockController;
+use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\StockMemoryDemoController;
 use App\Http\Controllers\StockMovementController;
@@ -79,6 +80,34 @@ Route::middleware('auth')->group(function () {
     Route::patch('/alerts/restock/{restockRequest}', [LowStockController::class, 'updateRestock'])
         ->middleware('role:admin')
         ->name('alerts.restock.update');
+
+    Route::get('/purchase-orders', [PurchaseOrderController::class, 'index'])
+        ->middleware('role:admin,staff')
+        ->name('purchase-orders.index');
+    Route::get('/purchase-orders/create/from-low-stock', [PurchaseOrderController::class, 'createFromLowStock'])
+        ->middleware('role:admin')
+        ->name('purchase-orders.create-from-low-stock');
+    Route::get('/purchase-orders/create', [PurchaseOrderController::class, 'create'])
+        ->middleware('role:admin')
+        ->name('purchase-orders.create');
+    Route::post('/purchase-orders', [PurchaseOrderController::class, 'store'])
+        ->middleware('role:admin')
+        ->name('purchase-orders.store');
+    Route::get('/purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'show'])
+        ->middleware('role:admin,staff')
+        ->name('purchase-orders.show');
+    Route::get('/purchase-orders/{purchaseOrder}/edit', [PurchaseOrderController::class, 'edit'])
+        ->middleware('role:admin')
+        ->name('purchase-orders.edit');
+    Route::put('/purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'update'])
+        ->middleware('role:admin')
+        ->name('purchase-orders.update');
+    Route::delete('/purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'destroy'])
+        ->middleware('role:admin')
+        ->name('purchase-orders.destroy');
+    Route::post('/purchase-orders/{purchaseOrder}/send-email', [PurchaseOrderController::class, 'sendEmail'])
+        ->middleware('role:admin')
+        ->name('purchase-orders.send-email');
 
     Route::get('/expiry', [ExpiryController::class, 'index'])->name('expiry.index');
     Route::post('/expiry/{ingredient}/remove', [ExpiryController::class, 'removeExpired'])

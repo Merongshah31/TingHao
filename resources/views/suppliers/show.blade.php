@@ -44,6 +44,41 @@
 
         <div class="table-card movement-preview">
             <div class="section-heading-row">
+                <h2>{{ __('messages.purchase_orders') }}</h2>
+                <a href="{{ route('purchase-orders.index') }}">{{ __('messages.view_all') }}</a>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>{{ __('messages.po_number') }}</th>
+                        <th>{{ __('messages.status') }}</th>
+                        <th>{{ __('messages.subtotal') }}</th>
+                        <th>{{ __('messages.sent_at') }}</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse ($supplier->purchaseOrders as $purchaseOrder)
+                        <tr>
+                            <td><strong>{{ $purchaseOrder->po_number }}</strong></td>
+                            <td><span class="status-pill po-status-{{ $purchaseOrder->status }}">{{ __('messages.'.$purchaseOrder->status) }}</span></td>
+                            <td>RM {{ number_format((float) $purchaseOrder->subtotal, 2) }}</td>
+                            <td>{{ $purchaseOrder->sent_at?->format('d M Y H:i') ?? __('messages.not_sent') }}</td>
+                            <td class="table-actions">
+                                <a class="action-chip" href="{{ route('purchase-orders.show', $purchaseOrder) }}">{{ __('messages.view') }}</a>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="5" class="empty-state">{{ __('messages.no_purchase_orders') }}</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        <div class="table-card movement-preview">
+            <div class="section-heading-row">
                 <h2>{{ __('messages.supplied_ingredients') }}</h2>
                 <a href="{{ route('inventory.index') }}">{{ __('messages.open_inventory') }}</a>
             </div>

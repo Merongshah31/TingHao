@@ -58,6 +58,11 @@ class Ingredient extends Model
         return $this->hasMany(RestockRequest::class);
     }
 
+    public function purchaseOrderItems(): HasMany
+    {
+        return $this->hasMany(PurchaseOrderItem::class);
+    }
+
     public function latestRestockRequest(): HasMany
     {
         return $this->restockRequests()->latest();
