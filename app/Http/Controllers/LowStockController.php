@@ -26,17 +26,25 @@ class LowStockController extends Controller
     {
         abort_unless($ingredient->isLowStock(), 422, 'Only low-stock ingredients can be requested for restock.');
 
+        $activeRequestExists = $ingredient->restockRequests()
+            ->whereIn('status', RestockRequest::ACTIVE_STATUSES)
+            ->exists();
+
+        if ($activeRequestExists) {
+            return back()->with('status', __('messages.restock_request_exists'));
+        }
+
         $data = $request->validate([
             'notes' => ['nullable', 'string', 'max:2000'],
         ]);
 
         $ingredient->restockRequests()->create([
             'status' => RestockRequest::STATUS_REQUESTED,
-            'notes' => $data['notes'] ?? null,
+            'notes' => $data['notes'] ?? __('messages.default_restock_request_note', ['ingredient' => $ingredient->name]),
             'requested_by' => $request->user()->id,
         ]);
 
-        return back()->with('status', 'Restock request created.');
+        return back()->with('status', __('messages.restock_request_submitted'));
     }
 
     public function updateRestock(Request $request, RestockRequest $restockRequest): RedirectResponse

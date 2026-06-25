@@ -25,6 +25,12 @@ class RestockRequest extends Model
 
     public const STATUS_COMPLETED = 'completed';
 
+    public const ACTIVE_STATUSES = [
+        self::STATUS_REQUESTED,
+        self::STATUS_ORDERED,
+        'pending',
+    ];
+
     public function ingredient(): BelongsTo
     {
         return $this->belongsTo(Ingredient::class);
@@ -45,6 +51,8 @@ class RestockRequest extends Model
         return match ($this->status) {
             self::STATUS_ORDERED => 'Ordered',
             self::STATUS_COMPLETED => 'Completed',
+            'rejected' => 'Rejected',
+            'pending' => 'Pending',
             default => 'Requested',
         };
     }

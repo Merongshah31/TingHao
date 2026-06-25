@@ -1269,6 +1269,34 @@ a {
     color: var(--forest);
 }
 
+.table-actions .action-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 32px;
+    padding: 7px 10px;
+    border: 1px solid #dbe5df;
+    border-radius: 999px;
+    background: #fff;
+    color: var(--forest);
+    font-size: 12px;
+    font-weight: 850;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.table-actions .action-chip.disabled {
+    border-color: #f0e1b6;
+    background: #fff8df;
+    color: #8a650d;
+}
+
+.table-actions .button-chip {
+    border-color: var(--forest);
+    background: var(--forest);
+    color: #fff;
+}
+
 .table-actions form {
     display: inline-flex;
     align-items: center;
@@ -1295,6 +1323,16 @@ a {
     font-size: 13px;
     font-weight: 800;
     padding: 8px 10px;
+}
+
+.table-actions .button-chip {
+    border-radius: 999px;
+    font-size: 12px;
+    padding: 7px 10px;
+}
+
+.restock-status-form {
+    padding-left: 4px;
 }
 
 .empty-state {

@@ -70,9 +70,11 @@ Route::middleware('auth')->group(function () {
         ->middleware('role:admin,staff')
         ->name('stock.store');
 
-    Route::get('/alerts/low-stock', [LowStockController::class, 'index'])->name('alerts.low-stock');
+    Route::get('/alerts/low-stock', [LowStockController::class, 'index'])
+        ->middleware('role:admin,staff')
+        ->name('alerts.low-stock');
     Route::post('/alerts/low-stock/{ingredient}/restock', [LowStockController::class, 'requestRestock'])
-        ->middleware('role:admin')
+        ->middleware('role:admin,staff')
         ->name('alerts.restock.request');
     Route::patch('/alerts/restock/{restockRequest}', [LowStockController::class, 'updateRestock'])
         ->middleware('role:admin')
