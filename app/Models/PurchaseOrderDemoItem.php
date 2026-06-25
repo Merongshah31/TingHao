@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
     'purchase_order_demo_id',
+    'ingredient_id',
     'ingredient_name',
     'quantity',
     'unit',
@@ -24,6 +25,11 @@ class PurchaseOrderDemoItem extends Model
     public function purchaseOrderDemo(): BelongsTo
     {
         return $this->belongsTo(PurchaseOrderDemo::class);
+    }
+
+    public function ingredient(): BelongsTo
+    {
+        return $this->belongsTo(Ingredient::class);
     }
 
     protected function casts(): array

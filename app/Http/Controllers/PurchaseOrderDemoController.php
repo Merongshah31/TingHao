@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Ingredient;
 use App\Models\PurchaseOrderDemo;
+use App\Models\PurchaseOrderDemoItem;
+use App\Models\StockMovement;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -46,8 +49,10 @@ class PurchaseOrderDemoController extends Controller
             $items = collect($data['items'])->map(function (array $item): array {
                 $quantity = (float) $item['quantity'];
                 $unitPrice = (float) ($item['unit_price'] ?? 0);
+                $ingredientId = Ingredient::where('name', $item['ingredient_name'])->value('id');
 
                 return [
+                    'ingredient_id' => $ingredientId,
                     'ingredient_name' => $item['ingredient_name'],
                     'quantity' => $quantity,
                     'unit' => $item['unit'] ?? null,
@@ -118,36 +123,42 @@ class PurchaseOrderDemoController extends Controller
 
         $mode = $request->input('mode', 'full');
 
-        DB::transaction(function () use ($po, $mode): void {
-            $po->load('items');
+        DB::transaction(function () use ($po, $mode, $request): void {
+            $items = $po->items()
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get();
 
             if ($mode === 'partial') {
-                $firstItem = $po->items->first();
+                $item = $items->first(fn (PurchaseOrderDemoItem $item): bool => $this->remainingQuantity($item) > 0);
 
-                if ($firstItem) {
-                    $firstItem->update([
-                        'received_quantity' => max(round((float) $firstItem->quantity / 2, 2), 0.01),
-                        'quality_status' => 'accepted',
-                    ]);
+                if ($item) {
+                    $quantityToReceive = min(
+                        $this->remainingQuantity($item),
+                        max(round((float) $item->quantity / 2, 2), 0.01)
+                    );
+
+                    $this->receiveItem($item, $quantityToReceive, $po, $request->user()->id);
                 }
 
                 $po->update([
-                    'status' => PurchaseOrderDemo::STATUS_PARTIALLY_RECEIVED,
+                    'status' => $this->allItemsReceived($items->fresh()) ? PurchaseOrderDemo::STATUS_RECEIVED : PurchaseOrderDemo::STATUS_PARTIALLY_RECEIVED,
                     'received_at' => now(),
                 ]);
 
                 return;
             }
 
-            foreach ($po->items as $item) {
-                $item->update([
-                    'received_quantity' => $item->quantity,
-                    'quality_status' => 'accepted',
-                ]);
+            foreach ($items as $item) {
+                $quantityToReceive = $this->remainingQuantity($item);
+
+                if ($quantityToReceive > 0) {
+                    $this->receiveItem($item, $quantityToReceive, $po, $request->user()->id);
+                }
             }
 
             $po->update([
-                'status' => PurchaseOrderDemo::STATUS_RECEIVED,
+                'status' => $this->allItemsReceived($items->fresh()) ? PurchaseOrderDemo::STATUS_RECEIVED : PurchaseOrderDemo::STATUS_PARTIALLY_RECEIVED,
                 'received_at' => now(),
             ]);
         });
@@ -185,5 +196,73 @@ class PurchaseOrderDemoController extends Controller
         $count = PurchaseOrderDemo::where('po_number', 'like', "PO-DEMO-{$year}-%")->count() + 1;
 
         return sprintf('PO-DEMO-%s-%03d', $year, $count);
+    }
+
+    private function receiveItem(PurchaseOrderDemoItem $item, float $quantityToReceive, PurchaseOrderDemo $po, int $userId): void
+    {
+        $ingredient = $this->lockIngredientForItem($item);
+
+        if ($ingredient) {
+            $quantityBefore = (float) $ingredient->quantity;
+            $quantityAfter = $quantityBefore + $quantityToReceive;
+
+            StockMovement::create([
+                'ingredient_id' => $ingredient->id,
+                'type' => StockMovement::TYPE_IN,
+                'quantity' => $quantityToReceive,
+                'quantity_before' => $quantityBefore,
+                'quantity_after' => $quantityAfter,
+                'reason' => "Purchase Order Received: {$po->po_number}",
+                'notes' => $item->ingredient_name,
+                'created_by' => $userId,
+            ]);
+
+            $ingredient->update([
+                'quantity' => $quantityAfter,
+                'updated_by' => $userId,
+            ]);
+
+            if (! $item->ingredient_id) {
+                $item->ingredient_id = $ingredient->id;
+            }
+        }
+
+        $item->received_quantity = round((float) $item->received_quantity + $quantityToReceive, 2);
+        $item->quality_status = 'accepted';
+        $item->save();
+    }
+
+    private function lockIngredientForItem(PurchaseOrderDemoItem $item): ?Ingredient
+    {
+        if ($item->ingredient_id) {
+            return Ingredient::query()
+                ->whereKey($item->ingredient_id)
+                ->lockForUpdate()
+                ->first();
+        }
+
+        return Ingredient::query()
+            ->where('name', $item->ingredient_name)
+            ->lockForUpdate()
+            ->first();
+    }
+
+    private function remainingQuantity(PurchaseOrderDemoItem $item): float
+    {
+        return max(0, round((float) $item->quantity - (float) $item->received_quantity, 2));
+    }
+
+    /**
+     * @param  iterable<int, PurchaseOrderDemoItem>  $items
+     */
+    private function allItemsReceived(iterable $items): bool
+    {
+        foreach ($items as $item) {
+            if ($this->remainingQuantity($item) > 0) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
