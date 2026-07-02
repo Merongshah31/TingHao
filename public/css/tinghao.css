@@ -81,6 +81,7 @@ a {
     align-items: center;
     gap: 10px;
     justify-self: end;
+    padding-right: 96px;
 }
 
 .nav-actions input {
@@ -2576,6 +2577,7 @@ a {
     .nav-actions {
         width: 100%;
         justify-content: center;
+        padding-right: 0;
     }
 
     .nav-actions input {
@@ -3185,9 +3187,6 @@ a {
     color: #c8d3cc;
 }
 
-body:has(.saas-dashboard) .language-switcher {
-    top: 84px;
-}
 
 body:has(.saas-dashboard) .saas-topbar-actions {
     padding-right: 96px;
