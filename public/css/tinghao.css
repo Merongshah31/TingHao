@@ -1623,6 +1623,104 @@ a {
     margin-top: 18px;
 }
 
+/* Fix for Laravel Default Tailwind Pagination */
+.pagination-wrap nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.pagination-wrap .flex {
+    display: flex;
+}
+
+.pagination-wrap .items-center {
+    align-items: center;
+}
+
+.pagination-wrap .justify-between {
+    justify-content: space-between;
+}
+
+.pagination-wrap .flex-1 {
+    flex: 1 1 0%;
+}
+
+.pagination-wrap .hidden {
+    display: none;
+}
+
+@media (min-width: 640px) {
+    .pagination-wrap .sm\:hidden {
+        display: none;
+    }
+    .pagination-wrap .sm\:flex {
+        display: flex;
+    }
+    .pagination-wrap .sm\:items-center {
+        align-items: center;
+    }
+    .pagination-wrap .sm\:justify-between {
+        justify-content: space-between;
+    }
+    .pagination-wrap .sm\:flex-1 {
+        flex: 1 1 0%;
+    }
+}
+
+.pagination-wrap p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.pagination-wrap svg {
+    width: 20px;
+    height: 20px;
+}
+
+.pagination-wrap .relative.inline-flex,
+.pagination-wrap a,
+.pagination-wrap span[aria-disabled],
+.pagination-wrap span[aria-current] > span {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 14px;
+    background: #fff;
+    border: 1px solid #d7ded8;
+    color: #425348;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    margin-left: -1px;
+}
+
+.pagination-wrap span.relative.z-0.inline-flex {
+    display: inline-flex;
+    border-radius: 6px;
+    overflow: hidden;
+    padding: 0;
+    border: none;
+    background: transparent;
+}
+
+.pagination-wrap a:hover {
+    background: #f4f6f4;
+    color: var(--forest);
+}
+
+.pagination-wrap span[aria-current] > span {
+    background: var(--forest);
+    border-color: var(--forest);
+    color: #fff;
+    z-index: 1;
+}
+
+.pagination-wrap span[aria-disabled] {
+    color: #aebfb4;
+    background: #f8faf9;
+}
+
 .segmented-actions {
     display: inline-flex;
     gap: 4px;
