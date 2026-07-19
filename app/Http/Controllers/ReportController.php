@@ -33,13 +33,18 @@ class ReportController extends Controller
 
         return view('reports.inventory', [
             'title' => 'Ting Hao | Inventory Report',
-            'categories' => Category::orderBy('name')->get(),
+            'categories' => Category::query()->select(['id', 'name'])->orderBy('name')->get(),
             'selectedCategory' => $categoryId,
             'ingredients' => Ingredient::query()
-                ->with(['category', 'supplier'])
+                ->select(['id', 'category_id', 'supplier_id', 'name', 'unit', 'quantity', 'minimum_stock'])
+                ->with([
+                    'category:id,name',
+                    'supplier:id,name',
+                ])
                 ->when($categoryId > 0, fn ($query) => $query->where('category_id', $categoryId))
                 ->orderBy('name')
-                ->get(),
+                ->paginate(25)
+                ->withQueryString(),
         ]);
     }
 
@@ -55,12 +60,17 @@ class ReportController extends Controller
             'from' => $from?->format('Y-m-d'),
             'to' => $to?->format('Y-m-d'),
             'movements' => StockMovement::query()
-                ->with(['ingredient', 'creator'])
+                ->select(['id', 'ingredient_id', 'type', 'quantity', 'quantity_before', 'quantity_after', 'created_by', 'created_at'])
+                ->with([
+                    'ingredient:id,name,unit',
+                    'creator:id,name',
+                ])
                 ->when(in_array($type, [StockMovement::TYPE_IN, StockMovement::TYPE_OUT], true), fn ($query) => $query->where('type', $type))
                 ->when($from, fn ($query) => $query->whereDate('created_at', '>=', $from))
                 ->when($to, fn ($query) => $query->whereDate('created_at', '<=', $to))
                 ->latest()
-                ->get(),
+                ->paginate(25)
+                ->withQueryString(),
         ]);
     }
 
@@ -69,10 +79,15 @@ class ReportController extends Controller
         return view('reports.low-stock', [
             'title' => 'Ting Hao | Low Stock Report',
             'ingredients' => Ingredient::query()
-                ->with(['category', 'supplier'])
+                ->select(['id', 'category_id', 'supplier_id', 'name', 'unit', 'quantity', 'minimum_stock'])
+                ->with([
+                    'category:id,name',
+                    'supplier:id,name',
+                ])
                 ->lowStock()
                 ->orderBy('name')
-                ->get(),
+                ->paginate(25)
+                ->withQueryString(),
         ]);
     }
 
@@ -84,11 +99,16 @@ class ReportController extends Controller
             'title' => 'Ting Hao | Expiry Report',
             'filter' => $filter,
             'ingredients' => Ingredient::query()
-                ->with(['category', 'supplier'])
+                ->select(['id', 'category_id', 'supplier_id', 'name', 'unit', 'quantity', 'expiry_date'])
+                ->with([
+                    'category:id,name',
+                    'supplier:id,name',
+                ])
                 ->when($filter === 'expired', fn ($query) => $query->expired())
                 ->when($filter !== 'expired', fn ($query) => $query->expiringWithin(30))
                 ->orderBy('expiry_date')
-                ->get(),
+                ->paginate(25)
+                ->withQueryString(),
         ]);
     }
 
@@ -96,7 +116,15 @@ class ReportController extends Controller
     {
         return view('reports.generated-summary', array_merge($this->generatedSummaryData(), [
             'title' => 'Ting Hao | Generated Summary Report',
-            'recentMovements' => StockMovement::with(['ingredient', 'creator'])->latest()->take(15)->get(),
+            'recentMovements' => StockMovement::query()
+                ->select(['id', 'ingredient_id', 'type', 'quantity', 'quantity_before', 'quantity_after', 'created_by', 'created_at'])
+                ->with([
+                    'ingredient:id,name,unit',
+                    'creator:id,name',
+                ])
+                ->latest()
+                ->take(15)
+                ->get(),
         ]));
     }
 
@@ -125,8 +153,20 @@ class ReportController extends Controller
             'generatedAt' => now(),
             'totalIngredients' => Ingredient::count(),
             'totalCategories' => Category::count(),
-            'lowStockIngredients' => Ingredient::with('category')->lowStock()->orderBy('name')->get(),
-            'expiredIngredients' => Ingredient::with('category')->expired()->orderBy('expiry_date')->get(),
+            'lowStockIngredients' => Ingredient::query()
+                ->select(['id', 'category_id', 'name', 'unit', 'quantity', 'minimum_stock'])
+                ->with('category:id,name')
+                ->lowStock()
+                ->orderBy('name')
+                ->limit(50)
+                ->get(),
+            'expiredIngredients' => Ingredient::query()
+                ->select(['id', 'category_id', 'name', 'unit', 'quantity', 'expiry_date'])
+                ->with('category:id,name')
+                ->expired()
+                ->orderBy('expiry_date')
+                ->limit(50)
+                ->get(),
         ];
     }
 }

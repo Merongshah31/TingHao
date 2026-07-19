@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Builder;
 
 #[Fillable([
@@ -63,9 +64,36 @@ class Ingredient extends Model
         return $this->hasMany(PurchaseOrderItem::class);
     }
 
+    public function stockAllocations(): HasMany
+    {
+        return $this->hasMany(StockAllocation::class);
+    }
+
+    public function supplierReturns(): HasMany
+    {
+        return $this->hasMany(SupplierReturn::class);
+    }
+
+    public function expiryLossRecommendations(): HasMany
+    {
+        return $this->hasMany(ExpiryLossRecommendation::class);
+    }
+
     public function latestRestockRequest(): HasMany
     {
         return $this->restockRequests()->latest();
+    }
+
+    public function currentRestockRequest(): HasOne
+    {
+        return $this->hasOne(RestockRequest::class)->latestOfMany();
+    }
+
+    public function activeRestockRequest(): HasOne
+    {
+        return $this->hasOne(RestockRequest::class)
+            ->whereIn('status', RestockRequest::ACTIVE_STATUSES)
+            ->latestOfMany();
     }
 
     public function isLowStock(): bool

@@ -6,6 +6,7 @@ use App\Models\BackupRecord;
 use App\Models\Category;
 use App\Models\Ingredient;
 use App\Models\RestockRequest;
+use App\Models\StockLocation;
 use App\Models\StockMovement;
 use App\Models\Supplier;
 use App\Models\SystemSetting;
@@ -55,6 +56,20 @@ class DatabaseSeeder extends Seeder
         $categories = Category::pluck('id', 'name');
 
         collect([
+            ['name' => 'Store Room', 'type' => StockLocation::TYPE_STORAGE, 'notes' => 'Main usable stock storage.'],
+            ['name' => 'Production Area', 'type' => StockLocation::TYPE_PRODUCTION, 'notes' => 'Stock released to bakery production.'],
+            ['name' => 'Front Counter', 'type' => StockLocation::TYPE_FRONT, 'notes' => 'Stock held near the sales counter.'],
+            ['name' => 'Quarantine / Damaged', 'type' => StockLocation::TYPE_QUARANTINE, 'notes' => 'Damaged or rejected stock waiting for supplier return.'],
+        ])->each(fn (array $location) => StockLocation::updateOrCreate(
+            ['name' => $location['name']],
+            [
+                'type' => $location['type'],
+                'notes' => $location['notes'],
+                'is_active' => true,
+            ]
+        ));
+
+        collect([
             [
                 'name' => 'Golden Grain Supply',
                 'contact_person' => 'Mr. Tan',
@@ -78,6 +93,14 @@ class DatabaseSeeder extends Seeder
                 'email' => 'supply@freshdairy.test',
                 'address' => 'Pending Industrial Estate',
                 'notes' => 'Butter, cream, milk powder, and dairy ingredients.',
+            ],
+            [
+                'name' => 'Supplier Ali',
+                'contact_person' => 'Ali Rahman',
+                'phone' => '+60 14-555 0199',
+                'email' => 'orders@supplierali.test',
+                'address' => 'Kuching Food Supplier Hub',
+                'notes' => 'Demo supplier for Malay restock messages and sugar orders.',
             ],
             [
                 'name' => 'BakePro Packaging',
@@ -125,14 +148,14 @@ class DatabaseSeeder extends Seeder
                 'name' => 'Caster Sugar',
                 'sku' => 'SGR-CASTER-5KG',
                 'category' => 'Sugar',
-                'supplier' => 'Sweet Pantry Trading',
+                'supplier' => 'Supplier Ali',
                 'unit' => 'kg',
                 'quantity' => 96,
                 'minimum_stock' => 40,
                 'cost_price' => 3.10,
                 'selling_price' => 4.35,
                 'expiry_date' => now()->addMonths(8)->toDateString(),
-                'notes' => 'General sweetener for cakes and pastry.',
+                'notes' => 'General sweetener for cakes and pastry. Demo alias: gula for Supplier Ali restock prompt.',
             ],
             [
                 'name' => 'Brown Sugar',
@@ -152,13 +175,26 @@ class DatabaseSeeder extends Seeder
                 'sku' => 'DRY-BUTTER-500G',
                 'category' => 'Dairy',
                 'supplier' => 'Fresh Dairy Partners',
-                'unit' => 'pack',
-                'quantity' => 48,
+                'unit' => 'kg',
+                'quantity' => 12,
                 'minimum_stock' => 25,
-                'cost_price' => 9.50,
-                'selling_price' => 12.00,
-                'expiry_date' => now()->addDays(12)->toDateString(),
-                'notes' => 'Expiring soon demo item.',
+                'cost_price' => 18.00,
+                'selling_price' => 24.00,
+                'expiry_date' => now()->addDays(5)->toDateString(),
+                'notes' => 'Phase 4 expiry loss demo item: RM216 at risk within 7 days.',
+            ],
+            [
+                'name' => 'Whole Milk Carton',
+                'sku' => 'DRY-MILK-1L',
+                'category' => 'Dairy',
+                'supplier' => 'Fresh Dairy Partners',
+                'unit' => 'carton',
+                'quantity' => 12,
+                'minimum_stock' => 20,
+                'cost_price' => 4.40,
+                'selling_price' => 5.70,
+                'expiry_date' => now()->addDays(9)->toDateString(),
+                'notes' => 'Low stock demo item for Qwen supplier confirmation messages.',
             ],
             [
                 'name' => 'Instant Yeast',

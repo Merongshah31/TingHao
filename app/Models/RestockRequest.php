@@ -25,6 +25,8 @@ class RestockRequest extends Model
 
     public const STATUS_COMPLETED = 'completed';
 
+    public const STATUS_REJECTED = 'rejected';
+
     public const ACTIVE_STATUSES = [
         self::STATUS_REQUESTED,
         self::STATUS_ORDERED,

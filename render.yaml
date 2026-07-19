@@ -5,7 +5,7 @@ services:
     plan: free
     dockerfilePath: ./Dockerfile
     dockerContext: .
-    healthCheckPath: /
+    healthCheckPath: /health
     autoDeployTrigger: commit
     envVars:
       - key: APP_NAME
@@ -21,7 +21,7 @@ services:
       - key: LOG_CHANNEL
         value: stderr
       - key: LOG_LEVEL
-        value: debug
+        value: warning
       - key: DB_CONNECTION
         value: supabase
       - key: SUPABASE_DB_HOST
@@ -46,3 +46,11 @@ services:
         value: database
       - key: FILESYSTEM_DISK
         value: local
+      - key: AUTOPILOT_PO_DRAFT_ENABLED
+        value: false
+      - key: AUTOPILOT_MINIMUM_CONFIDENCE
+        value: 0.75
+      - key: AUTOPILOT_SCAN_DEDUPE_MINUTES
+        value: 30
+      - key: REAL_EMAIL_ENABLED
+        value: false

@@ -80,6 +80,17 @@ class LowStockWorkflowTest extends TestCase
             'id' => $restockRequest->id,
             'status' => RestockRequest::STATUS_ORDERED,
         ]);
+
+        $this->actingAs($admin)
+            ->patch(route('alerts.restock.update', $restockRequest), [
+                'status' => RestockRequest::STATUS_REJECTED,
+            ])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('restock_requests', [
+            'id' => $restockRequest->id,
+            'status' => RestockRequest::STATUS_REJECTED,
+        ]);
     }
 
     public function test_staff_can_record_stock_in_and_stock_out(): void

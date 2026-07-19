@@ -56,6 +56,10 @@
                 </tbody>
             </table>
         </div>
+
+        <div class="pagination-wrap">
+            {{ $ingredients->links() }}
+        </div>
     </section>
 </main>
 @endsection

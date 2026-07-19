@@ -15,6 +15,7 @@ class SupplierController extends Controller
         $search = $request->string('search')->trim()->toString();
 
         $suppliers = Supplier::query()
+            ->select(['id', 'name', 'contact_person', 'phone', 'email', 'created_at'])
             ->withCount('ingredients')
             ->when($search !== '', function ($query) use ($search): void {
                 $query->where(function ($query) use ($search): void {

@@ -9,13 +9,16 @@
         <a href="{{ route('dashboard') }}" @class(['active' => request()->routeIs('dashboard', 'admin.dashboard', 'staff.dashboard')])>
             <i data-lucide="layout-dashboard"></i><span>{{ __('messages.overview') }}</span>
         </a>
+        <a href="{{ route('dashboard') }}#autopilot-actions" @class(['active' => false])>
+            <i data-lucide="activity"></i><span>{{ __('messages.autopilot_actions') }}</span>
+        </a>
         <a href="{{ route('inventory.index') }}" @class(['active' => request()->routeIs('inventory.*')])>
             <i data-lucide="package-2"></i><span>{{ __('messages.inventory') }}</span>
         </a>
         <a href="{{ route('stock.index') }}" @class(['active' => request()->routeIs('stock.*')])>
             <i data-lucide="arrow-left-right"></i><span>{{ __('messages.stock_movement') }}</span>
         </a>
-        <a href="{{ route('stock-memory.demo') }}" @class(['active' => request()->routeIs('stock-memory.*')])>
+        <a href="{{ route('stock-planner.index') }}" @class(['active' => request()->routeIs('stock-planner.*', 'stock-memory.*')])>
             <i data-lucide="brain-circuit"></i><span>{{ __('messages.smart_stock_memory_planner') }}</span>
         </a>
 
@@ -27,17 +30,26 @@
         <a href="{{ route('expiry.index') }}" @class(['active' => request()->routeIs('expiry.*')])>
             <i data-lucide="calendar-clock"></i><span>{{ __('messages.expiry') }}</span>
         </a>
+
+        <p>{{ __('messages.procurement') }}</p>
         <a href="{{ route('suppliers.index') }}" @class(['active' => request()->routeIs('suppliers.*')])>
             <i data-lucide="truck"></i><span>{{ __('messages.suppliers') }}</span>
         </a>
-        <a href="{{ route('po-demo.index') }}" @class(['active' => request()->routeIs('po-demo.*')])>
-            <i data-lucide="send"></i><span>{{ __('messages.purchase_orders') }}</span>
+        <a href="{{ route('purchase-orders.index') }}" @class(['active' => request()->routeIs('purchase-orders.*')])>
+            <i data-lucide="file-chart-column"></i><span>{{ __('messages.purchase_orders') }}</span>
         </a>
+
+        <p>{{ __('messages.analytics') }}</p>
         <a href="{{ route('reports.index') }}" @class(['active' => request()->routeIs('reports.*')])>
             <i data-lucide="chart-no-axes-combined"></i><span>{{ __('messages.reports') }}</span>
         </a>
+
+        <p>{{ __('messages.audit_demo') }}</p>
         <a href="{{ route('help-center.index') }}" @class(['active' => request()->routeIs('help-center.*')])>
             <i data-lucide="circle-help"></i><span>{{ __('messages.faq_guidelines') }}</span>
+        </a>
+        <a href="{{ route('agent.index') }}" @class(['active' => request()->routeIs('agent.*')])>
+            <i data-lucide="shield-check"></i><span>{{ __('messages.agent_audit') }}</span>
         </a>
 
         @if (auth()->user()->isAdmin())

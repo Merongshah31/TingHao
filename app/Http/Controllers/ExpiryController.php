@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Ingredient;
+use App\Models\ExpiryLossRecommendation;
 use App\Models\StockMovement;
+use App\Services\Agent\HumanApprovalGuardService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,21 +18,29 @@ class ExpiryController extends Controller
         $filter = $request->string('filter')->toString() ?: 'expiring';
 
         $ingredients = Ingredient::query()
-            ->with('category')
+            ->select(['id', 'category_id', 'name', 'sku', 'unit', 'quantity', 'expiry_date'])
+            ->with('category:id,name')
             ->when($filter === 'expired', fn ($query) => $query->expired())
             ->when($filter !== 'expired', fn ($query) => $query->expiringWithin(30))
             ->orderBy('expiry_date')
-            ->get();
+            ->paginate(15)
+            ->withQueryString();
 
         return view('expiry.index', [
             'title' => 'Ting Hao | Expiry Tracking',
             'ingredients' => $ingredients,
             'filter' => $filter,
+            'expiryLossRecommendation' => ExpiryLossRecommendation::query()
+                ->with('ingredient:id,name,unit,expiry_date')
+                ->whereIn('status', ExpiryLossRecommendation::OPEN_STATUSES)
+                ->orderByDesc('potential_loss')
+                ->first(),
         ]);
     }
 
-    public function removeExpired(Request $request, Ingredient $ingredient): RedirectResponse
+    public function removeExpired(Request $request, Ingredient $ingredient, HumanApprovalGuardService $guard): RedirectResponse
     {
+        $guard->assertAdminCanApprove($request->user(), HumanApprovalGuardService::ACTION_EXPIRED_STOCK_REMOVAL);
         abort_unless($ingredient->expiry_date && $ingredient->expiry_date->isPast(), 422, 'Only expired ingredients can be removed.');
 
         if ((float) $ingredient->quantity <= 0) {

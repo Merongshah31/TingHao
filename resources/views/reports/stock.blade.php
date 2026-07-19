@@ -59,6 +59,10 @@
                 </tbody>
             </table>
         </div>
+
+        <div class="pagination-wrap">
+            {{ $movements->links() }}
+        </div>
     </section>
 </main>
 @endsection

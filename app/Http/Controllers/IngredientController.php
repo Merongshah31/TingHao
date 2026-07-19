@@ -19,6 +19,17 @@ class IngredientController extends Controller
 
         $ingredients = Ingredient::query()
             ->with(['category', 'supplier'])
+            ->select([
+                'id',
+                'category_id',
+                'supplier_id',
+                'name',
+                'sku',
+                'unit',
+                'quantity',
+                'minimum_stock',
+                'expiry_date',
+            ])
             ->when($search !== '', function ($query) use ($search): void {
                 $query->where(function ($query) use ($search): void {
                     $query->where('name', 'like', "%{$search}%")
@@ -33,8 +44,8 @@ class IngredientController extends Controller
         return view('inventory.index', [
             'title' => 'Ting Hao | Inventory',
             'ingredients' => $ingredients,
-            'categories' => Category::orderBy('name')->get(),
-            'suppliers' => Supplier::orderBy('name')->get(),
+            'categories' => Category::query()->select(['id', 'name'])->orderBy('name')->get(),
+            'suppliers' => Supplier::query()->select(['id', 'name'])->orderBy('name')->get(),
             'search' => $search,
             'selectedCategory' => $categoryId,
         ]);
@@ -45,8 +56,8 @@ class IngredientController extends Controller
         return view('inventory.create', [
             'title' => 'Ting Hao | Add Ingredient',
             'ingredient' => new Ingredient(),
-            'categories' => Category::orderBy('name')->get(),
-            'suppliers' => Supplier::orderBy('name')->get(),
+            'categories' => Category::query()->select(['id', 'name'])->orderBy('name')->get(),
+            'suppliers' => Supplier::query()->select(['id', 'name'])->orderBy('name')->get(),
         ]);
     }
 
@@ -77,8 +88,8 @@ class IngredientController extends Controller
         return view('inventory.edit', [
             'title' => "Ting Hao | Edit {$ingredient->name}",
             'ingredient' => $ingredient,
-            'categories' => Category::orderBy('name')->get(),
-            'suppliers' => Supplier::orderBy('name')->get(),
+            'categories' => Category::query()->select(['id', 'name'])->orderBy('name')->get(),
+            'suppliers' => Supplier::query()->select(['id', 'name'])->orderBy('name')->get(),
         ]);
     }
 

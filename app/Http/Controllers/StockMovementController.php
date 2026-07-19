@@ -18,7 +18,11 @@ class StockMovementController extends Controller
         $ingredientId = $request->integer('ingredient');
 
         $movements = StockMovement::query()
-            ->with(['ingredient', 'creator'])
+            ->select(['id', 'ingredient_id', 'type', 'quantity', 'quantity_before', 'quantity_after', 'created_by', 'created_at'])
+            ->with([
+                'ingredient:id,name,unit',
+                'creator:id,name',
+            ])
             ->when(in_array($type, [StockMovement::TYPE_IN, StockMovement::TYPE_OUT], true), fn ($query) => $query->where('type', $type))
             ->when($ingredientId > 0, fn ($query) => $query->where('ingredient_id', $ingredientId))
             ->latest()
@@ -28,7 +32,7 @@ class StockMovementController extends Controller
         return view('stock.index', [
             'title' => 'Ting Hao | Stock History',
             'movements' => $movements,
-            'ingredients' => Ingredient::orderBy('name')->get(),
+            'ingredients' => Ingredient::query()->select(['id', 'name'])->orderBy('name')->get(),
             'selectedType' => $type,
             'selectedIngredient' => $ingredientId,
         ]);

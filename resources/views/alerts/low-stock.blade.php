@@ -12,7 +12,7 @@
             <div class="page-actions">
                 <a href="{{ route('dashboard') }}" class="btn btn-muted">{{ __('messages.dashboard') }}</a>
                 @if (auth()->user()->isAdmin())
-                    <a href="{{ route('po-demo.create') }}" class="btn btn-muted">{{ __('messages.create_demo_po_from_low_stock') }}</a>
+                    <a href="{{ route('purchase-orders.create-from-low-stock') }}" class="btn btn-muted">{{ __('messages.create_po_from_low_stock') }}</a>
                 @endif
                 <a href="{{ route('inventory.index') }}" class="btn btn-primary">{{ __('messages.inventory') }}</a>
             </div>
@@ -21,6 +21,12 @@
         @if (session('status'))
             <div class="success-alert">{{ session('status') }}</div>
         @endif
+
+        <section class="info-panel">
+            <p class="eyebrow">{{ __('messages.tinghao_agent') }}</p>
+            <h2>{{ __('messages.plan_restock_with_agent') }}</h2>
+            <p class="agent-summary">{{ __('messages.low_stock_agent_intro') }}</p>
+        </section>
 
         <div class="table-card">
             <table class="data-table">
@@ -36,10 +42,8 @@
                 <tbody>
                     @forelse ($ingredients as $ingredient)
                         @php
-                            $latestRestock = $ingredient->restockRequests->first();
-                            $activeRestock = $ingredient->restockRequests->first(
-                                fn ($request) => in_array($request->status, \App\Models\RestockRequest::ACTIVE_STATUSES, true)
-                            );
+                            $latestRestock = $ingredient->currentRestockRequest;
+                            $activeRestock = $ingredient->activeRestockRequest;
                             $displayRestock = $activeRestock ?? $latestRestock;
                             $restockStatusClass = match ($displayRestock?->status) {
                                 'completed' => 'ok',
@@ -77,6 +81,11 @@
                                     </form>
                                 @endif
 
+                                <form action="{{ route('alerts.restock.agent-plan', $ingredient) }}" method="post">
+                                    @csrf
+                                    <button type="submit" class="action-chip button-chip">{{ __('messages.plan_restock_with_agent') }}</button>
+                                </form>
+
                                 <a class="action-chip" href="{{ route('stock.create', [$ingredient, 'in']) }}">{{ __('messages.stock_in') }}</a>
                                 <a class="action-chip" href="{{ route('stock.create', [$ingredient, 'out']) }}">{{ __('messages.stock_out') }}</a>
 
@@ -88,6 +97,7 @@
                                             <option value="requested" @selected($activeRestock->status === 'requested')>{{ __('messages.requested') }}</option>
                                             <option value="ordered" @selected($activeRestock->status === 'ordered')>{{ __('messages.ordered') }}</option>
                                             <option value="completed" @selected($activeRestock->status === 'completed')>{{ __('messages.completed') }}</option>
+                                            <option value="rejected" @selected($activeRestock->status === 'rejected')>{{ __('messages.rejected') }}</option>
                                             </select>
                                             <button type="submit">{{ __('messages.update') }}</button>
                                     </form>
@@ -101,6 +111,10 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+
+        <div class="pagination-wrap">
+            {{ $ingredients->links() }}
         </div>
     </section>
 </main>

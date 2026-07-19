@@ -28,6 +28,70 @@
                 @endforeach
             </section>
 
+            <section id="autopilot-actions" class="saas-section-heading compact">
+                <div><span>{{ __('messages.tinghao_agent') }}</span><h2>{{ __('messages.todays_autopilot_actions') }}</h2></div>
+                <a href="{{ route('agent.index') }}">{{ __('messages.open_agent_console') }} <i data-lucide="arrow-right"></i></a>
+            </section>
+
+            <section class="dashboard-action-grid autopilot-actions-grid">
+                @forelse ($autopilotActions as $action)
+                    <article class="saas-card autopilot-action-card">
+                        <div class="saas-card-heading">
+                            <div>
+                                <span>{{ __('messages.tinghao_agent') }}</span>
+                                <h3>{{ $action['title'] }}</h3>
+                            </div>
+                            <span class="status-pill warning">{{ $action['status'] }}</span>
+                        </div>
+                        <p>{{ $action['summary'] }}</p>
+                        <a class="saas-card-link" href="{{ $action['url'] }}">{{ $action['action'] }} <i data-lucide="arrow-right"></i></a>
+                    </article>
+                @empty
+                    <article class="saas-card autopilot-action-card">
+                        <div class="saas-card-heading">
+                            <div><span>{{ __('messages.tinghao_agent') }}</span><h3>{{ __('messages.no_autopilot_actions') }}</h3></div>
+                            <span class="saas-change positive"><i data-lucide="circle-check-big"></i> {{ __('messages.healthy') }}</span>
+                        </div>
+                        <p>{{ __('messages.no_autopilot_actions_summary') }}</p>
+                    </article>
+                @endforelse
+            </section>
+
+            <section class="saas-section-heading compact">
+                <div><span>Smart Stock Planner</span><h2>Stock Prediction Signals</h2></div>
+                <a href="{{ route('stock-planner.index') }}">Open Stock Planner <i data-lucide="arrow-right"></i></a>
+            </section>
+
+            <section class="dashboard-action-grid stock-signals-grid">
+                @forelse ($stockPredictionSignals as $signal)
+                    @php($prediction = $signal['prediction'])
+                    @php($ingredient = $signal['ingredient'])
+                    <article class="saas-card autopilot-action-card stock-signal-card">
+                        <div class="saas-card-heading">
+                            <div>
+                                <span>{{ $prediction['risk_label'] ?? 'Risk Unknown' }}</span>
+                                <h3>{{ $ingredient->name }}</h3>
+                            </div>
+                            <span class="status-pill {{ $prediction['action_tone'] ?? 'neutral' }}">{{ $prediction['action_label'] ?? 'Monitor' }}</span>
+                        </div>
+                        <p>
+                            {{ number_format((float) $ingredient->quantity, 2) }} {{ $ingredient->unit }} on hand.
+                            {{ $signal['business_summary'] }}
+                        </p>
+                        <a class="saas-card-link" href="{{ route('stock-planner.prediction', $ingredient) }}">View prediction <i data-lucide="arrow-right"></i></a>
+                    </article>
+                @empty
+                    <article class="saas-card autopilot-action-card stock-signal-card">
+                        <div class="saas-card-heading">
+                            <div><span>Smart Stock Planner</span><h3>No prediction signals yet</h3></div>
+                            <span class="saas-change warning"><i data-lucide="activity"></i> Local service</span>
+                        </div>
+                        <p>Open Stock Planner to generate cached predictions, or start the FastAPI service if signals are unavailable.</p>
+                        <a class="saas-card-link" href="{{ route('stock-planner.index') }}">Open Stock Planner <i data-lucide="arrow-right"></i></a>
+                    </article>
+                @endforelse
+            </section>
+
             <section class="saas-section-heading">
                 <div><span>{{ __('messages.performance') }}</span><h2>{{ __('messages.inventory_analytics') }}</h2></div>
                 <a href="{{ route('reports.index') }}">{{ __('messages.open_full_analytics') }} <i data-lucide="arrow-right"></i></a>
@@ -46,6 +110,26 @@
                         @endforeach
                     </div>
                     <div class="saas-chart-axis"><span>Jan</span><span>Mar</span><span>May</span><span>Jul</span><span>Sep</span><span>Nov</span></div>
+                </article>
+
+                <article class="saas-card expiry-loss-dashboard-card">
+                    <div class="saas-card-heading">
+                        <div>
+                            <span>Expiry Loss Prevention</span>
+                            <h3>RM {{ number_format($analytics['expiryLossImpact']['total_potential_loss'], 2) }}</h3>
+                        </div>
+                        <span class="saas-change warning"><i data-lucide="calendar-clock"></i> 7 days</span>
+                    </div>
+                    <p>Potential RM at risk this week from {{ $analytics['expiryLossImpact']['at_risk_count'] }} ingredient(s).</p>
+                    <div class="expiry-loss-mini">
+                        <span>Open recommendations</span>
+                        <strong>{{ $analytics['expiryLossImpact']['open_count'] }}</strong>
+                    </div>
+                    <div class="expiry-loss-mini">
+                        <span>Highest risk</span>
+                        <strong>{{ $analytics['expiryLossImpact']['highest_risk_name'] ?? 'Run scan' }}</strong>
+                    </div>
+                    <a class="saas-card-link" href="{{ route('agent.expiry-loss') }}">Open expiry loss scan <i data-lucide="arrow-right"></i></a>
                 </article>
 
                 <article class="saas-card saas-health-card">
@@ -106,13 +190,15 @@
                     <a href="{{ route('reports.index') }}">{{ __('messages.reports') }}</a>
                 </x-dashboard.action-card>
 
-                <x-dashboard.action-card icon="send" :eyebrow="__('messages.purchase_orders')" :title="__('messages.purchase_orders')" :description="__('messages.purchase_order_demo_dashboard')">
-                    <a href="{{ route('po-demo.index') }}">{{ __('messages.open_demo_workflow') }} <i data-lucide="arrow-right"></i></a>
+                <x-dashboard.action-card icon="file-chart-column" :eyebrow="__('messages.purchase_orders')" :title="__('messages.purchase_orders')" :description="__('messages.purchase_orders_dashboard')">
+                    <a href="{{ route('purchase-orders.index') }}">{{ __('messages.open_purchase_orders') }} <i data-lucide="arrow-right"></i></a>
                     @if (auth()->user()->isAdmin())
-                        <a href="{{ route('po-demo.create') }}">{{ __('messages.create_demo_po') }}</a>
+                        <a href="{{ route('purchase-orders.index') }}">Pending PO Approvals ({{ $analytics['pendingAgentApprovalCount'] }})</a>
                     @else
-                        <a href="{{ route('po-demo.index') }}">{{ __('messages.view') }}</a>
+                        <a href="{{ route('purchase-orders.index') }}">{{ __('messages.view') }}</a>
                     @endif
+                    <a href="{{ route('supplier-returns.index') }}">{{ __('messages.supplier_returns') }} ({{ $analytics['openSupplierReturnCount'] }})</a>
+                    <a href="{{ route('purchase-orders.index') }}">{{ __('messages.receiving_discrepancy') }} ({{ $analytics['receivingDiscrepancyCount'] }})</a>
                 </x-dashboard.action-card>
 
                 <x-dashboard.action-card icon="circle-help" :eyebrow="__('messages.help_center')" :title="__('messages.faq_guidelines')" :description="__('messages.help_center_dashboard')">
@@ -120,10 +206,23 @@
                     <a href="{{ route('help-center.index') }}">{{ __('messages.guidelines') }}</a>
                 </x-dashboard.action-card>
 
-                <x-dashboard.action-card icon="brain-circuit" :eyebrow="__('messages.stock_planning_calendar')" :title="__('messages.smart_stock_memory_planner')" :description="__('messages.calendar_stock_demo')">
-                    <a href="{{ route('stock-memory.demo') }}">{{ __('messages.open_planner') }} <i data-lucide="arrow-right"></i></a>
-                    <a href="{{ route('inventory.index') }}">{{ __('messages.view_inventory') }}</a>
+                <x-dashboard.action-card icon="brain-circuit" eyebrow="Smart Stock Planner" :title="__('messages.smart_stock_memory_planner')" description="Review prediction cards and calendar signals for when to buy, buy less, or avoid overstocking.">
+                    <a href="{{ route('stock-planner.index') }}">{{ __('messages.open_planner') }} <i data-lucide="arrow-right"></i></a>
+                    <a href="{{ route('stock-planner.index', ['view' => 'calendar']) }}">Calendar View</a>
                 </x-dashboard.action-card>
+
+                <x-dashboard.action-card icon="activity" eyebrow="Track 4 Autopilot" title="TingHao Agent" description="Parse messy stock and supplier messages, then show inventory and supplier tool lookups.">
+                    <a href="{{ route('dashboard') }}#autopilot-actions">{{ __('messages.autopilot_actions') }} <i data-lucide="arrow-right"></i></a>
+                    <a href="{{ route('agent.expiry-loss') }}">Expiry Loss Prevention</a>
+                    <a href="{{ route('demo') }}">Demo Guide</a>
+                </x-dashboard.action-card>
+
+                @if (auth()->user()->isAdmin())
+                    <x-dashboard.action-card icon="shield-check" eyebrow="Human Review" title="Agent Approvals" description="Review PO drafts and supplier email drafts before any demo-safe business action continues.">
+                        <a href="{{ route('purchase-orders.index') }}">PO approvals ({{ $analytics['pendingAgentApprovalCount'] }}) <i data-lucide="arrow-right"></i></a>
+                        <a href="{{ route('dashboard') }}#autopilot-actions">Email drafts waiting ({{ $analytics['pendingSupplierEmailDraftCount'] }})</a>
+                    </x-dashboard.action-card>
+                @endif
 
                 @if (auth()->user()->isAdmin())
                     <x-dashboard.action-card icon="shield-check" :eyebrow="__('messages.administration')" :title="__('messages.system')" :description="__('messages.settings_intro')">
@@ -163,14 +262,14 @@
                     </div>
                     <div class="saas-movement-list">
                         @forelse ($analytics['recentMovements'] as $movement)
-                            @php($isStockIn = $movement->type === \App\Models\StockMovement::TYPE_IN)
+                            @php($isStockIn = $movement['type'] === \App\Models\StockMovement::TYPE_IN)
                             <div class="saas-movement-row">
                                 <span class="saas-movement-icon {{ $isStockIn ? 'in' : 'out' }}"><i data-lucide="{{ $isStockIn ? 'arrow-down-left' : 'arrow-up-right' }}"></i></span>
                                 <div>
-                                    <strong>{{ $movement->ingredient?->name ?? __('messages.deleted_ingredient') }}</strong>
-                                    <span>{{ $movement->creator?->name ?? __('messages.system') }} &middot; {{ $movement->created_at->format('d M, H:i') }}</span>
+                                    <strong>{{ $movement['ingredient_name'] ?? __('messages.deleted_ingredient') }}</strong>
+                                    <span>{{ $movement['creator_name'] ?? __('messages.system') }} &middot; {{ $movement['created_at'] }}</span>
                                 </div>
-                                <em class="{{ $isStockIn ? 'in' : 'out' }}">{{ $isStockIn ? '+' : '-' }}{{ number_format($movement->quantity, 2) }}</em>
+                                <em class="{{ $isStockIn ? 'in' : 'out' }}">{{ $isStockIn ? '+' : '-' }}{{ number_format($movement['quantity'], 2) }}</em>
                             </div>
                         @empty
                             <div class="saas-empty"><i data-lucide="activity"></i><strong>{{ __('messages.no_movement_yet') }}</strong><span>{{ __('messages.stock_ledger_entries') }}</span></div>
@@ -184,7 +283,8 @@
                 <div>
                     <a href="{{ route('inventory.create') }}"><i data-lucide="package-plus"></i><span><strong>{{ __('messages.add_new_item') }}</strong><small>{{ __('messages.create_inventory_record') }}</small></span></a>
                     <a href="{{ route('stock.index') }}"><i data-lucide="history"></i><span><strong>{{ __('messages.stock_movement_history') }}</strong><small>{{ __('messages.review_recent_movements') }}</small></span></a>
-                    <a href="{{ route('reports.index') }}"><i data-lucide="file-chart-column"></i><span><strong>{{ __('messages.generate_report') }}</strong><small>{{ __('messages.reports_dashboard') }}</small></span></a>
+                    <a href="{{ route('agent.index') }}"><i data-lucide="shield-check"></i><span><strong>{{ __('messages.agent_audit') }}</strong><small>{{ __('messages.audit_console') }}</small></span></a>
+                    <a href="{{ route('agent.expiry-loss') }}"><i data-lucide="calendar-clock"></i><span><strong>Expiry Loss Prevention</strong><small>Review RM at risk this week</small></span></a>
                 </div>
             </section>
         </main>

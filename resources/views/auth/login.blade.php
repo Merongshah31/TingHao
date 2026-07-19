@@ -3,7 +3,7 @@
 @section('content')
 <main class="login-page">
     <section class="login-shell">
-        <aside class="login-art" style="background-image:url('https://images.unsplash.com/photo-1608198093002-ad4e005484ec?auto=format&fit=crop&w=1000&q=80')">
+        <aside class="login-art" style="background-image:url('https://images.unsplash.com/photo-1608198093002-ad4e005484ec?auto=format&fit=crop&w=800&q=70')">
             <div>
                 <h2>{{ __('messages.login_art_title') }}</h2>
                 <p>{{ __('messages.login_art_copy') }}</p>

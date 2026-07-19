@@ -1,195 +1,115 @@
-# 🍞 Ting Hao Inventory Management System
+# TingHao Agent
 
-## 📌 Project Overview
+Qwen-powered Autopilot Procurement Agent for small bakery inventory operations.
 
-**Ting Hao Inventory Management System** is a web-based application designed for a bakery ingredient shop to manage inventory efficiently.
-
-The system provides a **public-facing website (front page)** to introduce the shop and a **secure admin/staff system** to manage inventory, users, and daily operations.
-
----
-
-## 🎯 Objectives
-
-* Provide a professional **front page** to introduce the business
-* Enable **efficient inventory management**
-* Support **role-based access (Admin & Staff)**
-* Improve stock tracking and reporting
-
----
-
-## 🌐 Website Structure
-
-### 🏠 Front Page (Public Access)
-
-The first page of the system focuses on **business introduction and credibility**.
-
-#### Features:
-
-* 🧁 Shop introduction (mission, background)
-* 📍 Shop address & location map
-* 📞 Contact information (phone, email)
-* 🕒 Opening hours
-* 🧭 Navigation bar (Home, About, Products, Contact)
-* 🔐 Admin Login access
-
-> This page is designed to give users a clear understanding of the business before accessing the system.
-
----
-
-## 🔐 System Access
-
-* **Admin Login** → Full system control
-* **Staff Login** → Limited operational access
-
----
-
-# 🔑 Features
-
-## 👨‍💼 Admin Features (Full Control)
-
-### 1. User Management
-
-* Add / Edit / Delete staff accounts
-* Assign roles (Admin / Staff)
-
-### 2. Inventory Management
-
-* Add new ingredients/products
-* Update product details (price, quantity)
-* Delete products
-
-### 3. Stock Control
-
-* Monitor stock levels
-* Record stock in (from suppliers)
-* Record stock out (sales)
-
-### 4. Reports & Analytics
-
-* View sales reports
-* View inventory reports
-* Track low stock items
-
-### 5. Supplier Management
-
-* Add / Update supplier information
-* Manage purchase orders
-
-### 6. System Control
-
-* Backup system data
-* Manage system settings
-* Ensure system security (authentication & access control)
-
----
-
-## 👨‍🔧 Staff Features (Limited Access)
-
-### 1. View Inventory
-
-* Check available stock
-* Search products
-
-### 2. Stock Update
-
-* Record stock in/out (with permission)
-
-### 3. Sales Entry
-
-* Update items sold
-
-### 4. Basic Reports
-
-* View stock list
-* Check low stock alerts
-
----
-
-## ⚖️ Role Comparison
-
-| Feature              | Admin  | Staff      |
-| -------------------- | ------ | ---------- |
-| User Management      | ✅      | ❌          |
-| Inventory Management | ✅      | ⚠️ Limited |
-| Stock Control        | ✅      | ✅          |
-| Reports              | ✅ Full | ⚠️ Basic   |
-| System Settings      | ✅      | ❌          |
-
----
-
-## 🧱 System Modules
-
-* Front Page (Public Website)
-* Authentication System (Login)
-* Inventory Management Module
-* User Management Module
-* Reporting & Analytics Module
-* Supplier Management Module
-
----
-
-## 🎨 Design Concept
-
-* Warm bakery theme 🍞
-* Clean and modern UI
-* User-friendly navigation
-* Mobile responsive design
-
----
-
-## 🛠️ Suggested Tech Stack
-
-*(You can modify based on your implementation)*
-
-* **Frontend:** HTML, CSS, JavaScript / React
-* **Backend:** Laravel / Flask / Node.js
-* **Database:** MySQL / PostgreSQL
-* **Design Tool:** Figma
-
----
-
-## 🚀 Future Improvements
-
-* Online ordering system (e-commerce)
-* Smart ingredient recommendation
-* Barcode scanning for stock updates
-* Real-time dashboard analytics
-
----
-
-## 📷 Screens (Optional)
-
-*(Add screenshots of your Figma or system here)*
-
----
-
-## 👤 Author
-
-**Ting Hao System Project**
-Developed for academic assignment / project
-
----
-
-## 📄 License
-
-This project is for educational purposes.
-
----
-
-## 📚 Documentation
-
-Implementation reference for future maintenance:
-
-* [Product Requirements Document](prd.md)
-* [Current Function Inventory](docs/current-function-inventory.md)
-* [Core Function Plan](docs/core-function-plan.md)
-* [Backend API Documentation](docs/backend-api.md)
-* [Implementation Reference](docs/implementation-reference.md)
-* [Render Deployment Guide](docs/render-deploy.md)
-* [Supabase Setup](docs/supabase-setup.md)
-
-
-
-
-
-The seeder creates admin/staff users, categories, suppliers, ingredients, stock movements, restock requests, system settings, and a backup snapshot.
+Track: Qwen Cloud Hackathon Track 4: Autopilot Agent
+
+## What It Does
+
+TingHao Agent turns messy staff messages and inventory alerts into structured restock plans, purchase order drafts, supplier email drafts, expiry-loss recommendations, and human-approved business actions.
+
+## Features
+
+- Smart Procurement Inbox for ambiguous staff/supplier messages.
+- Autonomous Restock Engine that checks real inventory and drafts purchase orders.
+- Supplier Email Draft workflow with admin approval and demo-safe mark-sent state.
+- Expiry Loss Prevention with RM impact calculation.
+- Reasoning Activity timeline with safe summaries, evidence, confidence, risk labels, and human checkpoints.
+- Human-in-the-loop guardrails for critical actions.
+- `/demo`, `/health`, and `/agent/proof` pages/endpoints for judges.
+
+## Architecture
+
+This is a Laravel full-stack app:
+
+- Frontend: Laravel Blade views.
+- Backend: Laravel controllers, services, Eloquent models.
+- Database: Supabase PostgreSQL by default, or Alibaba Cloud RDS PostgreSQL if moved for production.
+- Deployment target: Alibaba Cloud ECS running Docker, Nginx, PHP-FPM, and Laravel.
+- AI: Qwen Cloud / Alibaba Cloud Model Studio through `app/Services/Qwen/QwenClient.php`.
+
+Qwen is called server-side only. API keys are never exposed to Blade or frontend JavaScript.
+
+## Demo Accounts
+
+- Admin: `admin@tinghao.com` / `password`
+- Staff: `staff@tinghao.com` / `password`
+
+## Demo Steps
+
+1. Open `/demo`.
+2. Login as staff.
+3. Open `/agent`.
+4. Submit: `gula dah abis boss, nak order 50kg dari Supplier Ali tak?`
+5. Review parsed intent, inventory lookup, supplier ranking, Reasoning Activity, and tool calls.
+6. Open the linked PO draft.
+7. Login as admin.
+8. Approve the PO.
+9. Generate supplier email draft.
+10. Approve and mark sent.
+11. Run `/agent/expiry-loss`.
+12. Open `/health` and `/agent/proof`.
+
+## Setup
+
+```bash
+composer install
+npm install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate
+php artisan db:seed
+npm run build
+php artisan serve
+```
+
+## Environment Variables
+
+```env
+QWEN_API_KEY=
+QWEN_BASE_URL=https://dashscope-intl.aliyuncs.com/compatible-mode/v1
+QWEN_MODEL=qwen-plus
+QWEN_MOCK_MODE=true
+```
+
+For production:
+
+- `APP_ENV=production`
+- `APP_DEBUG=false`
+- `LOG_LEVEL=warning`
+- `QWEN_MOCK_MODE=false` when using a real Qwen key
+
+## Testing Commands
+
+```bash
+php artisan optimize:clear
+php artisan route:list
+php artisan test
+npm run build
+```
+
+## Security Notes
+
+- Qwen API keys are server-side only.
+- `/health` and `/agent/proof` expose safe booleans and feature metadata only.
+- No real supplier email is sent by the demo-safe workflow.
+- Critical actions require admin approval.
+- Reasoning Activity is structured explainability, not raw chain-of-thought.
+
+## Documentation
+
+- `docs/current-function-inventory.md`
+- `docs/prd.md`
+- `docs/architecture.md`
+- `docs/qwen-usage.md`
+- `docs/alibaba-cloud-deployment-proof.md`
+- `docs/devpost-submission-draft.md`
+- `docs/demo-script.md`
+- `docs/backend-api.md`
+- `docs/database.md`
+- `docs/ui-guide.md`
+- `docs/TODO.md`
+
+## License
+
+MIT License. See `LICENSE`.

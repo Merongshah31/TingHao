@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Ingredient;
 use App\Models\RestockRequest;
+use App\Services\Agent\TingHaoAgentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 
 class LowStockController extends Controller
@@ -15,10 +17,16 @@ class LowStockController extends Controller
         return view('alerts.low-stock', [
             'title' => 'Ting Hao | Low Stock Alerts',
             'ingredients' => Ingredient::query()
-                ->with(['category', 'restockRequests' => fn ($query) => $query->latest()])
+                ->select(['id', 'category_id', 'name', 'sku', 'unit', 'quantity', 'minimum_stock'])
+                ->with([
+                    'category:id,name',
+                    'currentRestockRequest',
+                    'activeRestockRequest',
+                ])
                 ->lowStock()
                 ->orderBy('name')
-                ->get(),
+                ->paginate(15)
+                ->withQueryString(),
         ]);
     }
 
@@ -47,10 +55,47 @@ class LowStockController extends Controller
         return back()->with('status', __('messages.restock_request_submitted'));
     }
 
+    public function planRestockWithAgent(Request $request, Ingredient $ingredient, TingHaoAgentService $agentService): RedirectResponse
+    {
+        abort_unless($ingredient->isLowStock(), 422, 'Only low-stock ingredients can be planned for restock.');
+
+        $supplier = $ingredient->supplier;
+        $shortage = max(0, (float) $ingredient->minimum_stock - (float) $ingredient->quantity);
+        $targetQuantity = max((float) $ingredient->minimum_stock, ((float) $ingredient->minimum_stock * 2) - (float) $ingredient->quantity);
+        $prompt = trim(sprintf(
+            'Plan restock for %s. Current stock is %.2f %s, minimum stock is %.2f %s, shortage is %.2f %s. Recommend %.2f %s%s and create a purchase order draft for admin approval.',
+            $ingredient->name,
+            (float) $ingredient->quantity,
+            $ingredient->unit,
+            (float) $ingredient->minimum_stock,
+            $ingredient->unit,
+            $shortage,
+            $ingredient->unit,
+            $targetQuantity,
+            $ingredient->unit,
+            $supplier ? ' from '.$supplier->name : ''
+        ));
+
+        $agentRun = $agentService->run($request->user(), $prompt);
+        Cache::forget(DashboardController::CACHE_KEY);
+
+        $purchaseOrder = $agentRun->purchaseOrders->first();
+
+        if ($purchaseOrder) {
+            return redirect()
+                ->route('purchase-orders.show', $purchaseOrder)
+                ->with('status', __('messages.agent_restock_plan_created'));
+        }
+
+        return redirect()
+            ->route('agent.runs.show', $agentRun)
+            ->with('status', __('messages.agent_restock_plan_needs_review'));
+    }
+
     public function updateRestock(Request $request, RestockRequest $restockRequest): RedirectResponse
     {
         $data = $request->validate([
-            'status' => ['required', 'in:requested,ordered,completed'],
+            'status' => ['required', 'in:requested,ordered,completed,rejected'],
         ]);
 
         $updates = ['status' => $data['status']];

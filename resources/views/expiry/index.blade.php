@@ -19,6 +19,33 @@
             <div class="success-alert">{{ session('status') }}</div>
         @endif
 
+        <section class="info-panel">
+            <div class="section-heading-row">
+                <div>
+                    <p class="eyebrow">{{ __('messages.tinghao_agent') }}</p>
+                    <h2>{{ __('messages.expiry_loss_prevention') }}</h2>
+                </div>
+                @if ($expiryLossRecommendation)
+                    <a href="{{ route('expiry-loss-recommendations.show', $expiryLossRecommendation) }}">{{ __('messages.view') }}</a>
+                @elseif (auth()->user()->isAdmin())
+                    <form method="post" action="{{ route('agent.expiry-loss.scan') }}">
+                        @csrf
+                        <button type="submit" class="btn btn-primary">{{ __('messages.run_expiry_loss_scan') }}</button>
+                    </form>
+                @endif
+            </div>
+            @if ($expiryLossRecommendation)
+                <dl>
+                    <div><dt>{{ __('messages.ingredient') }}</dt><dd>{{ $expiryLossRecommendation->ingredient?->name ?? __('messages.deleted_ingredient') }}</dd></div>
+                    <div><dt>{{ __('messages.days_until_expiry') }}</dt><dd>{{ $expiryLossRecommendation->days_until_expiry }}</dd></div>
+                    <div><dt>{{ __('messages.potential_rm_loss') }}</dt><dd>RM {{ number_format((float) $expiryLossRecommendation->potential_loss, 2) }}</dd></div>
+                    <div><dt>{{ __('messages.recommended_action') }}</dt><dd>{{ $expiryLossRecommendation->recommendation_title }}</dd></div>
+                </dl>
+            @else
+                <p class="agent-summary">{{ __('messages.no_expiry_loss_recommendation') }}</p>
+            @endif
+        </section>
+
         <div class="segmented-actions">
             <a href="{{ route('expiry.index', ['filter' => 'expiring']) }}" class="{{ $filter !== 'expired' ? 'active' : '' }}">{{ __('messages.expiring_soon') }}</a>
             <a href="{{ route('expiry.index', ['filter' => 'expired']) }}" class="{{ $filter === 'expired' ? 'active' : '' }}">{{ __('messages.expired') }}</a>
@@ -71,6 +98,10 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+
+        <div class="pagination-wrap">
+            {{ $ingredients->links() }}
         </div>
     </section>
 </main>

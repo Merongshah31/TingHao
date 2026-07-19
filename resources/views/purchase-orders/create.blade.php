@@ -17,6 +17,7 @@
         @include('purchase-orders.partials.form', [
             'action' => route('purchase-orders.store'),
             'method' => 'POST',
+            'suggestionsUrl' => route('purchase-orders.suggestions'),
         ])
     </section>
 </main>

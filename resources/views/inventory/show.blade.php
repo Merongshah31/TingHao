@@ -1,6 +1,13 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    $isLowStock = $ingredient->isLowStock();
+    $isExpiringSoon = $ingredient->expiry_date
+        && $ingredient->expiry_date->isFuture()
+        && $ingredient->expiry_date->lte(now()->addDays(30));
+    $recommendedQuantity = max(0, ((float) $ingredient->minimum_stock * 2) - (float) $ingredient->quantity);
+@endphp
 <main class="admin-page">
     <section class="page-shell">
         <div class="page-heading">
@@ -21,6 +28,30 @@
 
         @if (session('status'))
             <div class="success-alert">{{ session('status') }}</div>
+        @endif
+
+        @if ($isLowStock || $isExpiringSoon)
+            <section class="info-panel">
+                <p class="eyebrow">{{ __('messages.tinghao_agent') }}</p>
+                <h2>{{ __('messages.agent_recommendation') }}</h2>
+                @if ($isLowStock)
+                    <p class="agent-summary">
+                        {{ __('messages.inventory_agent_restock_recommendation', [
+                            'quantity' => number_format($recommendedQuantity, 2),
+                            'unit' => $ingredient->unit,
+                            'ingredient' => $ingredient->name,
+                            'supplier' => $ingredient->supplier?->name ?? __('messages.not_set'),
+                        ]) }}
+                    </p>
+                    <form action="{{ route('alerts.restock.agent-plan', $ingredient) }}" method="post" class="form-actions">
+                        @csrf
+                        <button type="submit" class="btn btn-primary">{{ __('messages.ask_agent_plan_restock') }}</button>
+                    </form>
+                @else
+                    <p class="agent-summary">{{ __('messages.inventory_agent_expiry_recommendation', ['ingredient' => $ingredient->name]) }}</p>
+                    <p><a href="{{ route('expiry.index') }}">{{ __('messages.view') }} {{ __('messages.expiry_dates') }}</a></p>
+                @endif
+            </section>
         @endif
 
         <div class="detail-grid">

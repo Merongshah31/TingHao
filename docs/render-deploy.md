@@ -89,7 +89,7 @@ If you do not use Blueprint:
 4. Branch: `main`.
 5. Dockerfile path: `./Dockerfile`.
 6. Docker context: `.`.
-7. Health check path: `/`.
+7. Health check path: `/health`.
 8. Add the environment variables below.
 
 Required environment variables:
@@ -101,7 +101,7 @@ APP_DEBUG=false
 APP_KEY=base64:your-generated-key
 APP_URL=https://your-render-service-name.onrender.com
 LOG_CHANNEL=stderr
-LOG_LEVEL=debug
+LOG_LEVEL=warning
 
 DB_CONNECTION=supabase
 SUPABASE_DB_HOST=db.your-project-ref.supabase.co

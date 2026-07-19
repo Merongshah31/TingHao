@@ -3,7 +3,7 @@
 @section('content')
 <header class="top-nav">
     <a href="{{ route('home') }}" class="brand" aria-label="Ting Hao home">
-        <img src="{{ asset('images/tinghao-logo-transparent.png') }}" alt="Ting Hao logo">
+        <img src="{{ asset('images/tinghao-logo-transparent.png') }}" alt="Ting Hao logo" width="160" height="64" decoding="async">
     </a>
     <nav class="main-links">
         <a href="#home" class="active">Home</a>
@@ -19,7 +19,7 @@
 
 <section id="home" class="hero">
     <div class="hero-overlay"></div>
-    <img src="https://unsplash.com/photos/X3XSSryTj3k/download?force=true&w=1800" alt="Bakery storefront">
+    <img src="https://unsplash.com/photos/X3XSSryTj3k/download?force=true&w=1800" alt="Bakery storefront" width="1800" height="1200" fetchpriority="high" decoding="async">
     <div class="hero-content">
         <h1>Ting Hao: Your Trusted<br>Baking Ingredient<br>Supplier</h1>
         <p>Nurturing the craft of artisanal baking with premium,
@@ -34,7 +34,7 @@
 
 <section id="mission" class="mission section-wrap">
     <div class="mission-image-wrap">
-        <img src="https://images.unsplash.com/photo-1483695028939-5bb13f8648b0?auto=format&fit=crop&w=900&q=80" alt="Kneading dough">
+        <img src="https://images.unsplash.com/photo-1483695028939-5bb13f8648b0?auto=format&fit=crop&w=900&q=80" alt="Kneading dough" width="900" height="600" loading="lazy" decoding="async">
         <div class="quote-card">Freshness is not an option, it is our heritage.</div>
     </div>
     <div class="mission-copy">
