@@ -2,11 +2,15 @@
 
 Last updated: 2026-07-19
 
+2026-07-19 safety requirement: an autopilot restock mission cannot terminate before required duplicate, supplier, draft, and human-approval checkpoints are completed.
+
 ## 1. Product Summary
 
 Ting Hao Inventory Management System is a Laravel-based web application for managing bakery ingredient inventory, stock movement, suppliers, purchase order receiving, supplier returns, expiry dates, reports, and system data.
 
 The product is designed for internal Ting Hao staff and administrators. It should help the business know what ingredients are available, what needs restocking, what is expiring soon, and how stock changes over time.
+
+2026-07-19 QA note: delivery-mode acceptance remains explicit. Demo Mark Sent is available only with real email disabled; Resend test-mode sending is available only with real email enabled and remains admin-controlled.
 
 ## 2. Product Goals
 
@@ -556,7 +560,7 @@ Acceptance criteria:
 
 - Agent run detail links to the created purchase order draft.
 - Purchase order detail shows agent reasoning and approval status.
-- No real supplier email is sent by the agent in Phase 3; supplier email drafts and mark-sent are demo-safe state changes.
+- No real supplier email is sent by the agent in Phase 3; supplier email drafts remain approval-gated. Admins may explicitly send an approved draft through Resend only when real email delivery is enabled and configured.
 - Phase 4 does not recommend expired ingredients and does not invent sales, POS, or recipe data.
 
 ### 8.14 Phase 5 Demo And Devpost Readiness
@@ -912,7 +916,8 @@ The shared header must keep language selection visually separate from Admin/prof
 - Scheduled observation must deduplicate recent scans, use cached predictions, avoid Qwen, and never create buy actions for non-restock recommendations.
 - Automatic PO drafting is opt-in, high-confidence only, duplicate-safe, and always creates `pending_approval`; it cannot approve or email a supplier.
 - Supplier decisions must expose actual available price, delivery, receiving quality, and contact evidence. Missing evidence must be explicit, and admins must retain supplier/quantity edit control.
-- Real Gmail delivery is opt-in and explicit. It requires an approved PO, approved draft, admin action, safe delivery evidence, and no credential persistence or display.
+- Real Resend delivery is opt-in and explicit. It requires an approved PO, approved draft, admin action, safe acceptance evidence, duplicate-send protection, and no credential persistence or display.
+- Resend test mode must send only to `RESEND_TEST_RECIPIENT` and use `onboarding@resend.dev`; production mode must use the linked supplier email and a verified `RESEND_FROM_ADDRESS`.
 - Stock cannot change before validated goods receiving. Confirmation, accepted/damaged/returned/shortage totals, and close status must be auditable.
 - Staff cannot approve/reject POs, edit/approve/send supplier email, confirm supplier, or close critical workflows. Admin remains the human approval authority.
 - `/agent` and `/demo` must report real capability state as Available, Waiting, Completed, Not configured, or Failed without fake completion.

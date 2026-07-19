@@ -8,6 +8,7 @@ use App\Services\Agent\HumanApprovalGuardService;
 use App\Services\Agent\ReasoningActivityService;
 use App\Services\Agent\SupplierEmailDeliveryService;
 use App\Services\Agent\SupplierEmailDraftService;
+use App\Services\Mail\ResendSupplierMailService;
 use DomainException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,7 +18,7 @@ use Illuminate\View\View;
 
 class SupplierEmailDraftController extends Controller
 {
-    public function show(Request $request, SupplierEmailDraft $supplierEmailDraft, SupplierEmailDeliveryService $deliveryService): View
+    public function show(Request $request, SupplierEmailDraft $supplierEmailDraft, SupplierEmailDeliveryService $deliveryService, ResendSupplierMailService $resendMailService): View
     {
         $supplierEmailDraft->load([
             'purchaseOrder.requestedBy',
@@ -38,6 +39,7 @@ class SupplierEmailDraftController extends Controller
             'supplierEmailDraft' => $supplierEmailDraft,
             'purchaseOrder' => $supplierEmailDraft->purchaseOrder,
             'emailDelivery' => $deliveryService->configuration(),
+            'resendDelivery' => $resendMailService->configuration($supplierEmailDraft),
         ]);
     }
 
@@ -144,7 +146,7 @@ class SupplierEmailDraftController extends Controller
         abort_unless($supplierEmailDraft->status === SupplierEmailDraft::STATUS_APPROVED, 422);
 
         if (config('autopilot.real_email_enabled', false)) {
-            return back()->withErrors(['supplier_email_draft' => 'Demo-safe Mark Email as Sent is unavailable while real email delivery is enabled. Use Send via Gmail.']);
+            return back()->withErrors(['supplier_email_draft' => 'Demo-safe Mark Email as Sent is unavailable while real email delivery is enabled. Use Send via Resend.']);
         }
 
         DB::transaction(function () use ($supplierEmailDraft): void {
@@ -205,6 +207,19 @@ class SupplierEmailDraftController extends Controller
         }
 
         return back()->with('status', 'Supplier email sent through configured Gmail SMTP. Delivery evidence was added to the audit trail.');
+    }
+
+    public function sendResend(Request $request, SupplierEmailDraft $supplierEmailDraft, ResendSupplierMailService $mailService, HumanApprovalGuardService $guard): RedirectResponse
+    {
+        $guard->assertAdminCanApprove($request->user(), HumanApprovalGuardService::ACTION_MARK_EMAIL_SENT);
+
+        try {
+            $mailService->send($supplierEmailDraft, $request->user());
+        } catch (DomainException $exception) {
+            return back()->withErrors(['supplier_email_draft' => $exception->getMessage()]);
+        }
+
+        return back()->with('status', 'Sent through Resend. Accepted by Resend; inbox delivery is not claimed until a delivery webhook confirms it.');
     }
 
     /**

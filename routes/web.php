@@ -262,6 +262,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/supplier-email-drafts/{supplierEmailDraft}/send-via-gmail', [SupplierEmailDraftController::class, 'sendViaGmail'])
         ->middleware('role:admin')
         ->name('supplier-email-drafts.send-via-gmail');
+    Route::post('/supplier-email-drafts/{supplierEmailDraft}/send-resend', [SupplierEmailDraftController::class, 'sendResend'])
+        ->middleware('role:admin')
+        ->name('supplier-email-drafts.send-resend');
     Route::post('/supplier-email-drafts/{supplierEmailDraft}/regenerate', [SupplierEmailDraftController::class, 'regenerate'])
         ->middleware('role:admin')
         ->name('supplier-email-drafts.regenerate');

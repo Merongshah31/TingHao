@@ -426,13 +426,33 @@ class PurchaseOrderManagementTest extends TestCase
             'status' => SupplierEmailDraft::STATUS_APPROVED,
         ]);
 
+        config(['autopilot.real_email_enabled' => false]);
+
         $this->actingAs($admin)
             ->get(route('purchase-orders.show', $purchaseOrder))
             ->assertOk()
             ->assertSee('Review Supplier Email Draft')
             ->assertSee('Mark Email as Sent')
             ->assertSee(route('supplier-email-drafts.mark-sent', $emailDraft), false)
+            ->assertDontSee('Send Test Email via Resend')
             ->assertSee('No real email is sent automatically. Admin controls the final action.');
+
+        config([
+            'autopilot.real_email_enabled' => true,
+            'autopilot.resend_test_mode' => true,
+            'autopilot.resend_test_recipient' => 'supplier@example.com',
+            'autopilot.resend_from_address' => 'onboarding@resend.dev',
+            'resend.api_key' => 're_test_key',
+            'services.resend.key' => 're_test_key',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('purchase-orders.show', $purchaseOrder))
+            ->assertOk()
+            ->assertSee('Send Test Email via Resend')
+            ->assertSee(route('supplier-email-drafts.send-resend', $emailDraft), false)
+            ->assertDontSee('Mark Email as Sent')
+            ->assertDontSee(route('supplier-email-drafts.mark-sent', $emailDraft), false);
 
         $purchaseOrder->update(['status' => PurchaseOrder::STATUS_REJECTED]);
 

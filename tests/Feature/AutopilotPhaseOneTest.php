@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Mail\SupplierEmailDraftMail;
 use App\Models\AgentRun;
+use App\Models\ApprovalRequest;
 use App\Models\Category;
 use App\Models\Ingredient;
 use App\Models\PurchaseOrder;
@@ -62,10 +63,24 @@ class AutopilotPhaseOneTest extends TestCase
             'autopilot.po_draft_enabled' => true,
             'autopilot.minimum_confidence' => 0.75,
             'autopilot.scan_dedupe_minutes' => 30,
+            'qwen.api_key' => 'server-side-test-key',
+            'qwen.mock_mode' => false,
+            'qwen.base_url' => 'https://qwen.example.test/v1',
         ]);
         Cache::flush();
+        $decisions = [
+            ['next_action' => 'check_open_purchase_order', 'reason_summary' => 'Check for duplicate orders first.', 'required_inputs' => [], 'confidence' => 0.91, 'stop_reason' => null],
+            ['next_action' => 'compare_suppliers', 'reason_summary' => 'Compare eligible suppliers.', 'required_inputs' => [], 'confidence' => 0.91, 'stop_reason' => null],
+            ['next_action' => 'create_purchase_order_draft', 'reason_summary' => 'Create the approval-gated draft.', 'required_inputs' => [], 'confidence' => 0.91, 'stop_reason' => null],
+        ];
         Http::fake([
             'http://127.0.0.1:8001/predict-stock-action' => Http::response($this->predictionResponse(0, 0.92), 200),
+            'https://qwen.example.test/v1/chat/completions' => function () use (&$decisions) {
+                return Http::response([
+                    'choices' => [['message' => ['content' => json_encode(array_shift($decisions), JSON_THROW_ON_ERROR)]]],
+                    'usage' => ['prompt_tokens' => 80, 'completion_tokens' => 30, 'total_tokens' => 110],
+                ]);
+            },
         ]);
 
         $admin = $this->user(User::ROLE_ADMIN);
@@ -111,10 +126,15 @@ class AutopilotPhaseOneTest extends TestCase
         $draft->load('agentRun');
 
         $this->assertSame($historySupplier->id, $draft->supplier_id);
-        $this->assertGreaterThan(0, (float) $draft->items()->firstOrFail()->quantity);
+        $this->assertSame(37.0, (float) $draft->items()->firstOrFail()->quantity);
         $this->assertCount(2, data_get($draft->agentRun->parsed_intent, 'supplier_comparison.suppliers', []));
         $this->assertSame($historySupplier->id, data_get($draft->agentRun->parsed_intent, 'supplier_comparison.recommended_supplier.id'));
         $this->assertSame(1, PurchaseOrder::query()->where('status', PurchaseOrder::STATUS_PENDING_APPROVAL)->count());
+        $this->assertDatabaseHas('agent_tool_calls', ['agent_run_id' => $draft->agent_run_id, 'tool_name' => 'check_open_purchase_order']);
+        $this->assertDatabaseHas('agent_tool_calls', ['agent_run_id' => $draft->agent_run_id, 'tool_name' => 'compare_suppliers']);
+        $this->assertDatabaseHas('agent_tool_calls', ['agent_run_id' => $draft->agent_run_id, 'tool_name' => 'create_purchase_order_draft']);
+        $this->assertDatabaseHas('approval_requests', ['purchase_order_id' => $draft->id, 'status' => ApprovalRequest::STATUS_PENDING]);
+        Http::assertNotSent(fn ($request): bool => str_contains($request->url(), 'dashscope'));
     }
 
     public function test_real_gmail_delivery_is_admin_only_and_records_safe_audit_evidence(): void
@@ -184,6 +204,7 @@ class AutopilotPhaseOneTest extends TestCase
 
     public function test_email_draft_edit_and_demo_mark_sent_work_before_delivery_audit_migration_is_deployed(): void
     {
+        config(['autopilot.real_email_enabled' => false]);
         Schema::table('supplier_email_drafts', function (Blueprint $table): void {
             $table->dropIndex(['delivery_status', 'last_delivery_attempt_at']);
             $table->dropColumn([

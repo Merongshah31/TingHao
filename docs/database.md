@@ -4,6 +4,10 @@ Last updated: 2026-07-19
 
 This document records the current database tables, important fields, relationships, and notes for the Ting Hao Inventory Management System.
 
+2026-07-19 test isolation note: no schema or stored-record behavior changed. The compatibility test continues to verify that draft status, `sent_at`, and purchase-order status update correctly when optional delivery-audit columns are absent.
+
+2026-07-19 restock decision-loop note: no schema change. Rejected Qwen stop actions use existing agent tool call output metadata and reasoning-step summaries.
+
 2026-07-08 sidebar navigation hardening note: no database tables, fields, relationships, status values, or migrations changed.
 
 2026-07-08 Agent Workflow Visualizer note: no database tables, fields, relationships, status values, or migrations changed. The `/agent` visualizer reads existing `agent_runs`, `agent_tool_calls`, `purchase_orders`, `approval_requests`, and `supplier_email_drafts` records.
@@ -683,7 +687,7 @@ New nullable `supplier_email_drafts` fields:
 - `delivery_metadata`: JSON containing safe result, attempt time, optional provider message ID, or non-secret error code.
 - `last_delivery_attempt_at`: timestamp of the latest real or demo delivery action.
 
-An index covers `delivery_status` and `last_delivery_attempt_at`. Gmail username/password and API credentials are never copied into database records.
+An index covers `delivery_status` and `last_delivery_attempt_at`. Mail credentials, Resend API keys, and authorization headers are never copied into database records.
 
 Phase 1 reuses existing relationships: `AgentRun -> AgentToolCall/AgentReasoningStep/PurchaseOrder`, `PurchaseOrder -> ApprovalRequest/SupplierEmailDraft/PurchaseOrderItem`, and receiving allocations/returns. Supplier comparison is computed from existing PO item prices, PO dates/statuses, receiving quantities, and supplier contact fields; no supplier score table was added. Predictions and Qwen explanations remain cache/read-time data, while the prediction snapshot and comparison used for an Agent PO are stored in `agent_runs.parsed_intent`.
 
@@ -692,6 +696,19 @@ Phase 1 reuses existing relationships: `AgentRun -> AgentToolCall/AgentReasoning
 - `supplier_email_drafts` deployments created before `2026_07_18_000001_add_delivery_audit_to_supplier_email_drafts.php` may lack all four nullable delivery-audit fields.
 - Application writes now detect those absent optional columns and continue with the existing draft status, approval, sent timestamp, and PO state fields only.
 - This is a temporary compatibility guard, not a schema replacement: run the migration to store delivery result/provider/metadata/attempt timestamps and use the delivery-audit index.
+
+## Resend Supplier Email Audit Fields (2026-07-19)
+
+Migration: `2026_07_19_000001_add_resend_fields_to_supplier_email_drafts_table.php`.
+
+New nullable `supplier_email_drafts` fields:
+
+- `provider`: real external provider label, currently `resend`.
+- `provider_message_id`: Resend email ID returned when the request is accepted.
+- `sent_by`: admin user who explicitly confirmed the Resend send action.
+- `send_error_category`: safe failure category for retry/audit display.
+
+Resend success uses `delivery_status = accepted`, not delivered, because inbox delivery requires a future webhook confirmation. Resend failures keep `status = approved`, do not set `sent_at`, and store no API key, authorization header, prompt, reasoning log, or raw exception stack.
 
 ## Bounded Restock Decision Audit Data (2026-07-19)
 

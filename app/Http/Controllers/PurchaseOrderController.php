@@ -16,6 +16,7 @@ use App\Services\Agent\AgentWorkflowAuditService;
 use App\Services\Agent\HumanApprovalGuardService;
 use App\Services\Agent\ReasoningActivityService;
 use App\Services\Agent\SupplierEmailDeliveryService;
+use App\Services\Mail\ResendSupplierMailService;
 use App\Services\Stock\StockPredictionApiClient;
 use App\Services\Stock\StockPredictionInputBuilder;
 use Carbon\CarbonImmutable;
@@ -150,7 +151,7 @@ class PurchaseOrderController extends Controller
             ->with('status', __('messages.purchase_order_created'));
     }
 
-    public function show(Request $request, PurchaseOrder $purchaseOrder, SupplierEmailDeliveryService $emailDelivery): View
+    public function show(Request $request, PurchaseOrder $purchaseOrder, SupplierEmailDeliveryService $emailDelivery, ResendSupplierMailService $resendMailService): View
     {
         abort_if(! $request->user()->isAdmin() && $purchaseOrder->requested_by !== $request->user()->id, 403);
 
@@ -171,6 +172,7 @@ class PurchaseOrderController extends Controller
                 'supplierReturns.ingredient',
             ]),
             'emailDelivery' => $emailDelivery->configuration(),
+            'resendDelivery' => $resendMailService->configuration($purchaseOrder->latestSupplierEmailDraft),
         ]);
     }
 

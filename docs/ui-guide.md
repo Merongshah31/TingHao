@@ -4,6 +4,10 @@ Last updated: 2026-07-19
 
 This guide documents current UI pages, main actions, role visibility, and design notes.
 
+2026-07-19 verification note: PO detail coverage now checks both mutually exclusive delivery states: demo mode shows Mark Email as Sent and hides Resend; Resend test mode shows Send Test Email via Resend and hides Mark Email as Sent.
+
+2026-07-19 audit note: the Agent workflow view can show a rejected premature stop and Laravel's deterministic fallback while the mission continues through its required checkpoint.
+
 ## Design Direction
 
 - Use the existing Ting Hao bakery/inventory theme.
@@ -304,8 +308,11 @@ The language selector now occupies a reserved area in the dashboard header and n
 - Stock Prediction detail shows an evidence table for eligible suppliers only when a buy action can be planned. Rank, price, lead time, receiving exceptions, contact availability, and `Insufficient history` stay business-readable in a contained responsive table.
 - Agent-created PO detail preserves FastAPI prediction context and now shows the supplier comparison used for the draft. Admin can open Edit and choose another supplier before approval.
 - Supplier Email Draft detail lets admin edit subject/body. Saving approved content visibly returns it to Draft so approval must happen again.
-- With `REAL_EMAIL_ENABLED=false`, approved drafts show Mark Email as Sent and explicitly state no delivery occurs. With valid real email configuration, the action changes to Send via Gmail. When enabled but incomplete, the page shows the server configuration message and no unsafe fallback action.
+- With `REAL_EMAIL_ENABLED=false`, approved drafts show Mark Email as Sent and explicitly state no delivery occurs. With valid Resend configuration, the action changes to Send Test Email via Resend in test mode or Send to Supplier via Resend in production mode. When enabled but incomplete, the page shows the server configuration message and no unsafe fallback action.
+- In `RESEND_TEST_MODE=true`, the draft page shows the Resend Test Mode badge and the configured recipient. In production mode, it shows the linked supplier name and a masked supplier email.
+- Resend send forms confirm "This will send a real email to {masked recipient}" before submission.
 - Delivery mode, status, provider label, and attempt time are visible; credentials and raw provider payloads are not.
+- Provider message IDs appear only in collapsed Technical Audit Details after a send attempt.
 - The Phase 1 capability map appears on `/agent` and `/demo` in sequential Observe through Audit order. Status colors are green completed, amber waiting, red failed, and gray available/not configured, with direct evidence links.
 - Staff do not see email edit/approve/send or PO approval/confirm/close controls. Admin-only route middleware remains the security boundary behind UI visibility.
 - `/demo` uses the real Phase 1 path: scheduled observation, Stock Planner review, approval-gated PO, explicit Qwen email draft, admin delivery action, supplier confirmation, receiving, close, and audit. It no longer directs judges to the retired message-entry panel.

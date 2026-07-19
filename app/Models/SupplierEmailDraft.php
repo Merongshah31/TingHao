@@ -17,10 +17,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'approved_by',
     'approved_at',
     'sent_at',
+    'provider',
+    'provider_message_id',
     'delivery_status',
     'delivery_provider',
     'delivery_metadata',
     'last_delivery_attempt_at',
+    'sent_by',
+    'send_error_category',
     'qwen_model',
     'qwen_metadata',
 ])]
@@ -35,6 +39,8 @@ class SupplierEmailDraft extends Model
     public const STATUS_SENT = 'sent';
 
     public const DELIVERY_DELIVERED = 'delivered';
+
+    public const DELIVERY_ACCEPTED = 'accepted';
 
     public const DELIVERY_FAILED = 'failed';
 
@@ -58,6 +64,11 @@ class SupplierEmailDraft extends Model
     public function approvedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function sentBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'sent_by');
     }
 
     protected function casts(): array

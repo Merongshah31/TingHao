@@ -408,7 +408,11 @@ class AgentConsoleTest extends TestCase
     public function test_admin_can_generate_approve_and_mark_supplier_email_draft_sent_without_real_email(): void
     {
         Mail::fake();
-        config(['qwen.mock_mode' => true, 'qwen.api_key' => null]);
+        config([
+            'autopilot.real_email_enabled' => false,
+            'qwen.mock_mode' => true,
+            'qwen.api_key' => null,
+        ]);
 
         $staff = $this->user(User::ROLE_STAFF);
         $admin = $this->user(User::ROLE_ADMIN);

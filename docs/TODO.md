@@ -4,6 +4,18 @@ Last updated: 2026-07-19
 
 Track pending work and future improvements here. Move items into `docs/CHANGELOG.md`, `docs/current-function-inventory.md`, and related docs when implemented.
 
+## Completed Resend Test Isolation (2026-07-19)
+
+- [x] Make demo-mode email tests explicitly set `autopilot.real_email_enabled=false`.
+- [x] Cover both demo Mark Sent and Resend test-mode PO detail actions without using local `.env` values.
+- [x] Keep the high-confidence autopilot draft scenario covered with duplicate and safety guardrails intact.
+
+## Completed Bounded Restock Stop Safety (2026-07-19)
+
+- [x] Reject premature Qwen stops before required workflow checks.
+- [x] Use state-based allowed actions and deterministic Laravel fallback.
+- [x] Keep duplicate-PO, expiry-review, supplier comparison, draft, and approval tests covered.
+
 ## Documentation Workflow
 
 - Add CI or review checklist support to flag code changes without documentation updates.
@@ -187,14 +199,16 @@ Track pending work and future improvements here. Move items into `docs/CHANGELOG
 - [x] Add safe quantity fallback, pending-PO guard, and optional high-confidence automatic `pending_approval` drafts.
 - [x] Keep automatic PO drafting disabled by default and preserve mandatory admin approval.
 - [x] Add admin supplier email content editing with reapproval after edits.
-- [x] Add optional explicit Gmail delivery with safe success/failure audit metadata.
+- [x] Add optional explicit Resend delivery with safe success/failure audit metadata.
 - [x] Audit supplier confirmation, goods receiving discrepancies, and final PO closure.
 - [x] Add real-status Phase 1 capability maps to `/agent` and `/demo`.
 - [ ] Run `php artisan migrate` in each deployed environment.
-- [ ] Apply `2026_07_18_000001_add_delivery_audit_to_supplier_email_drafts.php` to the active Supabase deployment, then verify supplier-email draft edit and mark-sent/Gmail audit evidence.
+- [ ] Apply `2026_07_18_000001_add_delivery_audit_to_supplier_email_drafts.php` to the active Supabase deployment, then verify supplier-email draft edit, demo mark-sent, and Resend audit evidence.
 - [ ] Configure a production scheduler/cron to execute `php artisan schedule:run` every minute.
-- [ ] Configure and verify a Gmail app password, From address, and SMTP transport before enabling `REAL_EMAIL_ENABLED=true`.
-- [ ] Send one controlled test message to an approved test supplier address and verify delivered/failed audit evidence.
+- [ ] Run `2026_07_19_000001_add_resend_fields_to_supplier_email_drafts_table.php` in each deployed environment.
+- [ ] Configure and verify `RESEND_API_KEY`, `RESEND_TEST_RECIPIENT`, `RESEND_FROM_ADDRESS`, and `RESEND_FROM_NAME` before enabling `REAL_EMAIL_ENABLED=true`.
+- [ ] Send one controlled Resend test message to `bakerytinghao@outlook.com` and verify the inbox plus accepted/failed audit evidence.
+- [ ] Add Resend webhook handling if delivery, bounce, or failure status should update after initial acceptance.
 - [ ] Capture final admin/staff demo screenshots with at least two suppliers containing representative PO history.
 
 ## Bounded Restock Decision Loop (2026-07-19)

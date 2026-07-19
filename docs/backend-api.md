@@ -4,6 +4,10 @@ Last reviewed: 2026-07-19
 
 This document explains the current Laravel backend surface for Ting Hao and the recommended future JSON API structure. The current system is a Laravel Blade application, so most backend actions are web routes that return HTML pages or redirects instead of JSON.
 
+2026-07-19 test isolation note: feature tests set `autopilot.real_email_enabled`, Resend test-mode, and fake provider credentials through `config([...])`; backend routes never read test behavior from local `.env` values during automated verification.
+
+2026-07-19 restock decision-loop note: PredictionRestockPlanningService now exposes state-based allowed actions, rejects premature stop selections, records safe rejection metadata, and falls back to the required Laravel action.
+
 ## 1. Backend Architecture
 
 ```text
@@ -632,6 +636,7 @@ Controller:
 | GET | `/supplier-email-drafts/{supplierEmailDraft}` | `supplier-email-drafts.show` | `SupplierEmailDraftController@show` | Admin, Staff owner | View generated supplier email draft |
 | POST | `/supplier-email-drafts/{supplierEmailDraft}/approve` | `supplier-email-drafts.approve` | `SupplierEmailDraftController@approve` | Admin | Approve generated draft |
 | POST | `/supplier-email-drafts/{supplierEmailDraft}/mark-sent` | `supplier-email-drafts.mark-sent` | `SupplierEmailDraftController@markSent` | Admin | Mark sent for demo and set PO status to sent |
+| POST | `/supplier-email-drafts/{supplierEmailDraft}/send-resend` | `supplier-email-drafts.send-resend` | `SupplierEmailDraftController@sendResend` | Admin | Send approved draft through Resend after explicit admin action |
 | POST | `/supplier-email-drafts/{supplierEmailDraft}/regenerate` | `supplier-email-drafts.regenerate` | `SupplierEmailDraftController@regenerate` | Admin | Call Qwen again and replace the existing draft while it is still draft status |
 
 Behavior:
@@ -639,7 +644,11 @@ Behavior:
 - Draft generation requires an approved purchase order.
 - Staff may view only drafts attached to their own requested purchase orders.
 - Admin-only actions update draft status and log agent tool calls when the draft is linked to an agent run.
-- Mark sent does not send any real email.
+- Mark sent does not send any real email and is hidden when real delivery is enabled.
+- Resend sending requires `REAL_EMAIL_ENABLED=true`, configured `RESEND_API_KEY`, approved PO, approved draft, valid linked supplier email, unsent draft state, and admin role.
+- In `RESEND_TEST_MODE=true`, the linked supplier email must match `RESEND_TEST_RECIPIENT`; the service uses `onboarding@resend.dev` and rejects any other recipient.
+- Resend success stores `provider=resend`, `provider_message_id`, `delivery_status=accepted`, `sent_at`, `sent_by`, safe `delivery_metadata`, updates the PO sent timestamp, and records `send_supplier_email_resend`.
+- Resend failure leaves the draft approved and retryable, records `delivery_status=failed` plus a safe error category, and never returns API keys, authorization headers, raw provider traces, or stack traces.
 
 ### Purchase Order Demo Routes
 
@@ -917,7 +926,7 @@ Route files:
 - No product recipe mapping exists yet.
 - Excel upload/download is confirmed but not implemented yet.
 - Current backend actions mainly return Blade views and redirects.
-- TingHao Agent can create pending-approval PO drafts, demo-safe supplier email drafts, and expiry loss recommendations, but production messaging integrations are still future work.
+- TingHao Agent can create pending-approval PO drafts, supplier email drafts, and expiry loss recommendations. Real supplier email delivery is available only through the explicit admin Resend action after PO and draft approval.
 # Maintenance note (2026-07-18)
 
 No backend route or language-switch behavior changed. The dashboard language selector spacing was adjusted in CSS only to prevent overlap with the header Admin/profile action.
@@ -990,19 +999,19 @@ No backend route or language-switch behavior changed. The dashboard language sel
 ### Supplier email draft routes
 
 - `PUT /supplier-email-drafts/{supplierEmailDraft}` (`supplier-email-drafts.update`): admin only; validates subject/body, stores edits, and resets approval if required.
-- `POST /supplier-email-drafts/{supplierEmailDraft}/send-via-gmail` (`supplier-email-drafts.send-via-gmail`): admin only; requires approved PO, approved draft, `REAL_EMAIL_ENABLED=true`, Gmail SMTP, valid From address, and supplier email.
+- `POST /supplier-email-drafts/{supplierEmailDraft}/send-resend` (`supplier-email-drafts.send-resend`): admin only; requires approved PO, approved draft, `REAL_EMAIL_ENABLED=true`, configured Resend API key, valid server-side sender, valid linked supplier email, and unsent draft state.
 - Existing `POST .../mark-sent` is available only when real email is disabled. It records a demo state and never invokes mail transport.
-- Gmail success sets draft/PO sent state and safe delivery metadata. Failure leaves the draft approved, records a failed delivery attempt, and returns a user-friendly validation message.
+- Resend success sets draft/PO sent state and safe acceptance metadata. Failure leaves the draft approved, records a failed delivery attempt, and returns a user-friendly validation message.
 
 ### Audit response behavior
 
-- PO approve/reject, supplier confirmation, goods receiving, Gmail success/failure, and PO closure append `AgentToolCall` plus safe `AgentReasoningStep` summaries when the PO has an `agent_run_id`.
+- PO approve/reject, supplier confirmation, goods receiving, Resend success/failure, and PO closure append `AgentToolCall` plus safe `AgentReasoningStep` summaries when the PO has an `agent_run_id`.
 - Receiving audit output contains only business quantities/status/timestamps; no secrets or raw chain-of-thought are stored.
 - `GET /agent` scopes capability evidence to the authenticated staff member unless the viewer is admin. Public `/demo` shows operational capability status but no credentials.
 
 ## Supplier Email Draft Legacy Schema Compatibility (2026-07-19)
 
-- The existing supplier-email draft update, demo mark-sent, and Gmail send routes dynamically omit only missing optional delivery-audit columns on deployments that have not run the latest migration.
+- The existing supplier-email draft update, demo mark-sent, and real send routes dynamically omit only missing optional delivery-audit columns on deployments that have not run the delivery-audit migration.
 - Core status, approval, sent timestamp, PO transition, authorization, validation, redirects, and audit logging remain unchanged.
 - Deployments must still apply `2026_07_18_000001_add_delivery_audit_to_supplier_email_drafts.php` before relying on persisted delivery provider/status/metadata evidence.
 

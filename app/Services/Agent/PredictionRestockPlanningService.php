@@ -304,15 +304,15 @@ class PredictionRestockPlanningService
             : null;
 
         if ($expiryDays !== null && $expiryDays < 0) {
-            return ['require_expiry_review', 'stop'];
+            return ['require_expiry_review'];
         }
 
         if (! ($state['inventory_observed'] ?? false)) {
-            return ['get_inventory', 'stop'];
+            return ['get_inventory'];
         }
 
         if (! ($state['prediction_observed'] ?? false)) {
-            return ['read_stock_prediction', 'stop'];
+            return ['read_stock_prediction'];
         }
 
         if (! in_array((string) ($prediction['recommended_action'] ?? 'monitor'), self::RESTOCK_ACTIONS, true)) {
@@ -320,7 +320,7 @@ class PredictionRestockPlanningService
         }
 
         if (! ($state['open_po_checked'] ?? false)) {
-            return ['check_open_purchase_order', 'stop'];
+            return ['check_open_purchase_order'];
         }
 
         if (($state['open_purchase_order'] ?? null) || (float) ($predictionInput['pending_po_quantity'] ?? 0) > 0) {
@@ -328,7 +328,7 @@ class PredictionRestockPlanningService
         }
 
         if (! is_array($state['supplier_comparison'] ?? null)) {
-            return ['compare_suppliers', 'stop'];
+            return ['compare_suppliers'];
         }
 
         if (! data_get($state, 'supplier_comparison.recommended_supplier.id')) {
@@ -336,10 +336,10 @@ class PredictionRestockPlanningService
         }
 
         if (! ($state['purchase_order'] ?? null)) {
-            return ['create_purchase_order_draft', 'stop'];
+            return ['create_purchase_order_draft'];
         }
 
-        return ['request_human_approval', 'stop'];
+        return ['request_human_approval'];
     }
 
     /**
@@ -372,18 +372,25 @@ class PredictionRestockPlanningService
         $validShape = is_string($json['reason_summary'] ?? null)
             && is_array($json['required_inputs'] ?? null)
             && (is_numeric($json['confidence'] ?? null) || ($json['confidence'] ?? null) === null);
-        $useQwenDecision = ($response['error'] ?? null) === null && $validAction && $validShape;
-        $fallbackAction = collect($allowedActions)->first(fn (string $allowed): bool => $allowed !== 'stop') ?? 'stop';
-        $nextAction = $useQwenDecision ? $requestedAction : $fallbackAction;
-        $reasonSummary = $useQwenDecision
-            ? Str::limit(Str::squish(strip_tags((string) $json['reason_summary'])), 500, '')
-            : 'Qwen output was unavailable or invalid, so Laravel selected the next safe action from the bounded workflow.';
-        $confidence = $useQwenDecision && is_numeric($json['confidence'] ?? null)
-            ? max(0.0, min(1.0, (float) $json['confidence']))
-            : null;
         $requestedStopReason = is_string($json['stop_reason'] ?? null)
             && in_array($json['stop_reason'], self::STOP_REASONS, true)
             ? $json['stop_reason']
+            : null;
+        $invalidStop = $requestedAction === 'stop'
+            && (! $validAction || ! $this->validTerminalStop($requestedStopReason, $state, $prediction, $predictionInput));
+        $useQwenDecision = ($response['error'] ?? null) === null && $validAction && $validShape && ! $invalidStop;
+        $fallbackAction = collect($allowedActions)->first(fn (string $allowed): bool => $allowed !== 'stop') ?? 'stop';
+        $nextAction = $useQwenDecision ? $requestedAction : $fallbackAction;
+        $fallbackReason = ($state['open_po_checked'] ?? false)
+            ? 'Stop rejected because the mission has not reached a valid terminal state.'
+            : 'Stop rejected because the open purchase order check is incomplete.';
+        $reasonSummary = $invalidStop
+            ? $fallbackReason
+            : ($useQwenDecision
+                ? Str::limit(Str::squish(strip_tags((string) $json['reason_summary'])), 500, '')
+                : 'Qwen output was unavailable or invalid, so Laravel selected the next safe action from the bounded workflow.');
+        $confidence = $useQwenDecision && is_numeric($json['confidence'] ?? null)
+            ? max(0.0, min(1.0, (float) $json['confidence']))
             : null;
 
         return [
@@ -393,9 +400,37 @@ class PredictionRestockPlanningService
             'stop_reason' => $requestedStopReason,
             'source' => $useQwenDecision ? 'qwen' : 'deterministic_fallback',
             'mocked' => (bool) ($response['mocked'] ?? false),
-            'rejected_action' => $requestedAction !== '' && ! $validAction ? Str::limit($requestedAction, 100, '') : null,
-            'metadata' => is_array($response['metadata'] ?? null) ? $response['metadata'] : [],
+            'rejected_action' => $invalidStop || ($requestedAction !== '' && ! $validAction) ? Str::limit($requestedAction, 100, '') : null,
+            'metadata' => array_merge(
+                is_array($response['metadata'] ?? null) ? $response['metadata'] : [],
+                $invalidStop ? ['invalid_stop' => true, 'safe_reason' => $fallbackReason] : []
+            ),
         ];
+    }
+
+    /** @param array<string, mixed> $state @param array<string, mixed> $prediction @param array<string, mixed> $predictionInput */
+    private function validTerminalStop(?string $stopReason, array $state, array $prediction, array $predictionInput): bool
+    {
+        if ($stopReason === null) {
+            return false;
+        }
+
+        $expiryDays = is_numeric($predictionInput['expiry_days_remaining'] ?? null)
+            ? (int) $predictionInput['expiry_days_remaining']
+            : null;
+
+        return match ($stopReason) {
+            'duplicate_po_found' => ($state['open_po_checked'] ?? false)
+                && (($state['open_purchase_order'] ?? null) || (float) ($predictionInput['pending_po_quantity'] ?? 0) > 0),
+            'expiry_review_required' => $expiryDays !== null && $expiryDays < 0,
+            'human_approval_required', 'purchase_order_created' => (bool) ($state['purchase_order'] ?? null),
+            'blocked' => ! in_array((string) ($prediction['recommended_action'] ?? 'monitor'), self::RESTOCK_ACTIONS, true)
+                || (($state['open_po_checked'] ?? false) && ! data_get($state, 'supplier_comparison.recommended_supplier.id')),
+            'completed' => ! in_array((string) ($prediction['recommended_action'] ?? 'monitor'), self::RESTOCK_ACTIONS, true)
+                || (bool) ($state['purchase_order'] ?? null),
+            'max_iterations_reached' => false,
+            default => false,
+        };
     }
 
     /**

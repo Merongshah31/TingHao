@@ -150,8 +150,8 @@
     $predictionContext = $isStockPredictionPo ? data_get($purchaseOrder->agentRun?->parsed_intent, 'stock_prediction', []) : [];
     $qwenContext = $isStockPredictionPo ? data_get($purchaseOrder->agentRun?->parsed_intent, 'qwen_explanation') : null;
     $supplierComparison = $purchaseOrder->agentRun ? data_get($purchaseOrder->agentRun->parsed_intent, 'supplier_comparison', []) : [];
-    $realEmailEnabled = (bool) ($emailDelivery['enabled'] ?? false);
-    $realEmailConfigured = (bool) ($emailDelivery['configured'] ?? false);
+    $realEmailEnabled = (bool) ($resendDelivery['enabled'] ?? false);
+    $realEmailConfigured = (bool) ($resendDelivery['configured'] ?? false);
 @endphp
 
 <main class="admin-page">
@@ -516,9 +516,9 @@
                                 </form>
                             @endif
                             @if ($purchaseOrder->status === \App\Models\PurchaseOrder::STATUS_APPROVED && $latestEmailDraft->status === \App\Models\SupplierEmailDraft::STATUS_APPROVED && $realEmailConfigured)
-                                <form method="post" action="{{ route('supplier-email-drafts.send-via-gmail', $latestEmailDraft) }}">
+                                <form method="post" action="{{ route('supplier-email-drafts.send-resend', $latestEmailDraft) }}" onsubmit="return confirm('This will send a real email to {{ $resendDelivery['masked_recipient'] ?? 'the configured recipient' }}.');">
                                     @csrf
-                                    <button class="btn btn-primary" type="submit">Send via Gmail</button>
+                                    <button class="btn btn-primary" type="submit">{{ ($resendDelivery['test_mode'] ?? false) ? 'Send Test Email via Resend' : 'Send to Supplier via Resend' }}</button>
                                 </form>
                             @endif
                         </div>

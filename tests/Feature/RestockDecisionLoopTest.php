@@ -10,6 +10,7 @@ use App\Models\PurchaseOrder;
 use App\Models\Supplier;
 use App\Models\User;
 use App\Services\Stock\StockPredictionInputBuilder;
+use App\Services\Agent\PredictionRestockPlanningService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Cache;
@@ -113,6 +114,57 @@ class RestockDecisionLoopTest extends TestCase
         Http::assertSentCount(1);
     }
 
+    public function test_premature_stop_before_open_purchase_order_check_falls_back_safely(): void
+    {
+        $this->configureLiveQwen();
+        $this->fakeQwenDecisions([
+            $this->stopDecision(null),
+            $this->decision('compare_suppliers', 'Compare eligible suppliers.'),
+            $this->decision('create_purchase_order_draft', 'Create the approval-gated draft.'),
+        ]);
+
+        $staff = $this->user(User::ROLE_STAFF);
+        $supplier = $this->supplier();
+        $ingredient = $this->ingredient(['supplier_id' => $supplier->id]);
+        $this->cachePrediction($ingredient);
+
+        $this->actingAs($staff)
+            ->post(route('stock-planner.plan-restock', $ingredient))
+            ->assertRedirect()
+            ->assertSessionHas('status', 'Restock plan created. Purchase order draft is waiting for admin approval.');
+
+        $run = AgentRun::query()->latest()->firstOrFail();
+        $this->assertSame([
+            'check_open_purchase_order',
+            'compare_suppliers',
+            'create_purchase_order_draft',
+        ], collect(data_get($run->parsed_intent, 'decision_loop.iterations'))->pluck('selected_action')->all());
+        $firstDecision = $run->toolCalls()->where('tool_name', 'qwen_select_next_action')->firstOrFail();
+        $this->assertSame('stop', $firstDecision->output_payload['rejected_action']);
+        $this->assertSame('Stop rejected because the open purchase order check is incomplete.', data_get($firstDecision->output_payload, 'qwen_metadata.safe_reason'));
+        $this->assertSame('deterministic_fallback', data_get($run->parsed_intent, 'decision_loop.iterations.0.decision_source'));
+        $this->assertDatabaseCount('purchase_orders', 1);
+    }
+
+    public function test_valid_terminal_stop_reason_is_accepted_only_after_duplicate_check(): void
+    {
+        $service = app(PredictionRestockPlanningService::class);
+        $method = new \ReflectionMethod($service, 'validTerminalStop');
+        $method->setAccessible(true);
+
+        $prediction = ['recommended_action' => 'add_stock_now'];
+        $input = ['pending_po_quantity' => 0, 'expiry_days_remaining' => 10];
+
+        $this->assertTrue($method->invoke($service, 'duplicate_po_found', [
+            'open_po_checked' => true,
+            'open_purchase_order' => new PurchaseOrder(),
+        ], $prediction, $input));
+        $this->assertFalse($method->invoke($service, 'duplicate_po_found', [
+            'open_po_checked' => false,
+            'open_purchase_order' => null,
+        ], $prediction, $input));
+    }
+
     public function test_expired_ingredient_branch_requires_review_and_never_creates_a_draft(): void
     {
         $this->configureLiveQwen();
@@ -196,6 +248,18 @@ class RestockDecisionLoopTest extends TestCase
             'required_inputs' => [],
             'confidence' => 0.91,
             'stop_reason' => null,
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    private function stopDecision(?string $reason): array
+    {
+        return [
+            'next_action' => 'stop',
+            'reason_summary' => 'Stop the mission.',
+            'required_inputs' => [],
+            'confidence' => 0.91,
+            'stop_reason' => $reason,
         ];
     }
 

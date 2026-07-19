@@ -8,7 +8,12 @@
         \App\Models\SupplierEmailDraft::STATUS_APPROVED,
     ], true);
     $realEmailEnabled = (bool) ($emailDelivery['enabled'] ?? false);
-    $realEmailConfigured = (bool) ($emailDelivery['configured'] ?? false);
+    $resendEnabled = (bool) ($resendDelivery['enabled'] ?? false);
+    $resendConfigured = (bool) ($resendDelivery['configured'] ?? false);
+    $resendTestMode = (bool) ($resendDelivery['test_mode'] ?? false);
+    $resendRecipient = $resendDelivery['recipient'] ?? null;
+    $resendMaskedRecipient = $resendDelivery['masked_recipient'] ?? null;
+    $providerLabel = $supplierEmailDraft->provider ?? $supplierEmailDraft->delivery_provider;
 @endphp
 <main class="admin-page">
     <section class="page-shell">
@@ -31,12 +36,12 @@
                     </form>
                 @endif
                 @if ($isAdmin && $supplierEmailDraft->status === \App\Models\SupplierEmailDraft::STATUS_APPROVED)
-                    @if ($realEmailEnabled && $realEmailConfigured)
-                        <form method="post" action="{{ route('supplier-email-drafts.send-via-gmail', $supplierEmailDraft) }}">
+                    @if ($resendEnabled && $resendConfigured)
+                        <form method="post" action="{{ route('supplier-email-drafts.send-resend', $supplierEmailDraft) }}" onsubmit="return confirm('This will send a real email to {{ $resendMaskedRecipient ?? 'the configured recipient' }}.');">
                             @csrf
-                            <button class="btn btn-primary" type="submit">Send via Gmail</button>
+                            <button class="btn btn-primary" type="submit">{{ $resendTestMode ? 'Send Test Email via Resend' : 'Send to Supplier via Resend' }}</button>
                         </form>
-                    @elseif (! $realEmailEnabled)
+                    @elseif (! $resendEnabled)
                         <form method="post" action="{{ route('supplier-email-drafts.mark-sent', $supplierEmailDraft) }}">
                             @csrf
                             <button class="btn btn-primary" type="submit">Mark Email as Sent</button>
@@ -60,11 +65,17 @@
             <article class="autopilot-card simple-decision-card">
                 <p class="eyebrow">AI-generated supplier draft</p>
                 <h2>Admin review and explicit delivery</h2>
-                <p class="agent-summary">TingHao Agent generated this supplier email draft from the approved purchase order. Admin reviews and approves the content, then explicitly sends through configured Gmail or records a demo-safe Mark Sent action. Nothing is sent automatically.</p>
+                <p class="agent-summary">TingHao Agent generated this supplier email draft from the approved purchase order. Admin reviews and approves the content, then explicitly sends through Resend or records a demo-safe Mark Sent action. Nothing is sent automatically.</p>
                 <div class="agent-detail-list">
                     <div><span>Linked PO</span><strong>{{ $purchaseOrder->po_number }}</strong></div>
                     <div><span>Supplier</span><strong>{{ $supplierEmailDraft->supplier?->name ?? __('messages.not_set') }}</strong></div>
                     <div><span>Email status</span><strong>{{ ucfirst($supplierEmailDraft->status) }}</strong></div>
+                    @if ($resendTestMode && $resendEnabled)
+                        <div><span>Resend mode</span><strong>Resend Test Mode</strong></div>
+                    @endif
+                    @if ($resendEnabled)
+                        <div><span>Recipient</span><strong>{{ $resendTestMode ? $resendRecipient : ($resendMaskedRecipient ?? __('messages.not_set')) }}</strong></div>
+                    @endif
                     <div><span>Source</span><strong>Qwen Cloud</strong></div>
                 </div>
                 @if ($supplierEmailDraft->agentRun)
@@ -74,10 +85,16 @@
 
             <article class="safety-card simple-decision-card">
                 <p class="eyebrow">Email Safety</p>
-                <h2>{{ $realEmailEnabled ? 'Real Gmail delivery control' : 'Demo-safe delivery mode' }}</h2>
+                <h2>{{ $resendEnabled ? 'Real Resend delivery control' : 'Demo-safe delivery mode' }}</h2>
                 <ul>
                     <li>Admin approval is required before any delivery action.</li>
-                    <li>{{ $emailDelivery['message'] }}</li>
+                    <li>{{ $resendDelivery['message'] ?? $emailDelivery['message'] }}</li>
+                    @if (! $resendEnabled)
+                        <li>Real email delivery is disabled.</li>
+                    @endif
+                    @if ($resendTestMode && $resendEnabled)
+                        <li><span class="status-pill warning">Resend Test Mode</span> Recipient: {{ $resendRecipient }}</li>
+                    @endif
                     <li>Supplier contact details are shown for review.</li>
                     <li>Delivery success or failure is stored without credentials.</li>
                 </ul>
@@ -96,12 +113,25 @@
                 <div><dt>Approved by</dt><dd>{{ $supplierEmailDraft->approvedBy?->name ?? __('messages.not_set') }}</dd></div>
                 <div><dt>Approved at</dt><dd>{{ $supplierEmailDraft->approved_at?->format('d M Y H:i') ?? __('messages.not_set') }}</dd></div>
                 <div><dt>Sent at</dt><dd>{{ $supplierEmailDraft->sent_at?->format('d M Y H:i') ?? 'Not marked sent' }}</dd></div>
-                <div><dt>Delivery mode</dt><dd>{{ $realEmailEnabled ? 'Explicit Gmail SMTP' : 'Demo-safe Mark Sent' }}</dd></div>
+                <div><dt>Delivery mode</dt><dd>{{ $resendEnabled ? ($resendTestMode ? 'Resend Test Mode' : 'Explicit Resend') : 'Demo-safe Mark Sent' }}</dd></div>
                 <div><dt>Delivery status</dt><dd>{{ $supplierEmailDraft->delivery_status ? str($supplierEmailDraft->delivery_status)->replace('_', ' ')->title() : 'Not attempted' }}</dd></div>
-                <div><dt>Delivery provider</dt><dd>{{ $supplierEmailDraft->delivery_provider ? str($supplierEmailDraft->delivery_provider)->replace('_', ' ')->title() : 'Not set' }}</dd></div>
+                <div><dt>Delivery provider</dt><dd>{{ $providerLabel ? str($providerLabel)->replace('_', ' ')->title() : 'Not set' }}</dd></div>
                 <div><dt>Last attempt</dt><dd>{{ $supplierEmailDraft->last_delivery_attempt_at?->format('d M Y H:i') ?? 'Not attempted' }}</dd></div>
             </dl>
         </div>
+
+        @if ($supplierEmailDraft->status === \App\Models\SupplierEmailDraft::STATUS_SENT || $supplierEmailDraft->provider_message_id || $supplierEmailDraft->send_error_category)
+            <details class="info-panel advanced-details-panel">
+                <summary>Technical Audit Details</summary>
+                <div class="advanced-details-body">
+                    <dl>
+                        <div><dt>Provider</dt><dd>{{ $supplierEmailDraft->provider ?? $supplierEmailDraft->delivery_provider ?? 'Not set' }}</dd></div>
+                        <div><dt>Provider message ID</dt><dd>{{ $supplierEmailDraft->provider_message_id ?? 'Not set' }}</dd></div>
+                        <div><dt>Send error category</dt><dd>{{ $supplierEmailDraft->send_error_category ?? 'None' }}</dd></div>
+                    </dl>
+                </div>
+            </details>
+        @endif
 
         <section class="info-panel supplier-email-card">
             <div class="section-heading-row">

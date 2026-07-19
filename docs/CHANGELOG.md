@@ -2,6 +2,120 @@
 
 Record every system update in chronological order. Each entry should be simple enough for future developers and stakeholders to understand what changed.
 
+## 2026-07-19 - Bounded Restock Stop Validation
+
+### Summary
+
+Validated Qwen stop actions against Laravel mission state. Nonterminal iterations now expose only the required next action, and premature stops are audited as rejected before deterministic fallback.
+
+### Files Changed
+
+- app/Services/Agent/PredictionRestockPlanningService.php
+- tests/Feature/RestockDecisionLoopTest.php
+- tests/Feature/AutopilotPhaseOneTest.php
+- Required documentation files in docs/
+
+### Routes Added Or Changed
+
+- None.
+
+### Database Changes
+
+- None. Existing agent tool calls and reasoning records store rejected-action metadata and the safe reason.
+
+### Permission Changes
+
+- None.
+
+### Known Limitations
+
+- Qwen decisions may still be replaced by deterministic Laravel actions when invalid or unavailable.
+
+### Next Steps
+
+- Keep duplicate-PO, expiry, and approval checkpoint tests in the regression suite.
+
+## 2026-07-19 - Resend Test Isolation Verification
+
+### Summary
+
+Updated feature-test configuration so demo Mark Sent and Resend test-mode UI assertions do not depend on local `.env` values. Production email guards and high-confidence autopilot behavior were unchanged.
+
+### Files Changed
+
+- `tests/Feature/AgentConsoleTest.php`
+- `tests/Feature/AutopilotPhaseOneTest.php`
+- `tests/Feature/PurchaseOrderManagementTest.php`
+- Required documentation files in `docs/`
+
+### Routes Added Or Changed
+
+- None.
+
+### Database Changes
+
+- None. The legacy optional delivery-audit migration compatibility test still removes only its optional columns and verifies status and timestamps.
+
+### Permission Changes
+
+- None. Admin-only Resend and demo Mark Sent guards remain unchanged.
+
+### Known Limitations
+
+- Automated tests use faked mail/provider boundaries and do not verify external inbox delivery.
+
+### Next Steps
+
+- Run one controlled manual Resend test-mode send after deployment configuration is reviewed.
+
+## 2026-07-19 - Resend Supplier Email Delivery
+
+### Summary
+
+Integrated explicit real supplier email sending through Resend for approved supplier email drafts. Admins can send only after PO approval and draft approval; test mode permits only the configured test recipient, records Resend acceptance metadata, and prevents duplicate sends with a lock plus provider idempotency key. Demo-safe Mark Sent remains available only when real email delivery is disabled.
+
+### Files Changed
+
+- `.env.example`
+- `config/autopilot.php`
+- `config/services.php`
+- `app/Models/SupplierEmailDraft.php`
+- `app/Services/Mail/ResendSupplierMailService.php`
+- `app/Http/Controllers/SupplierEmailDraftController.php`
+- `app/Http/Controllers/PurchaseOrderController.php`
+- `routes/web.php`
+- `resources/views/supplier-email-drafts/show.blade.php`
+- `resources/views/purchase-orders/show.blade.php`
+- `database/migrations/2026_07_19_000001_add_resend_fields_to_supplier_email_drafts_table.php`
+- `tests/Feature/ResendSupplierEmailTest.php`
+- Required documentation files in `docs/`
+
+### Routes Added Or Changed
+
+- Added admin-only `POST /supplier-email-drafts/{supplierEmailDraft}/send-resend` (`supplier-email-drafts.send-resend`).
+- Existing supplier draft and PO detail pages now show Resend send actions when real email is enabled and demo Mark Sent only when real email is disabled.
+
+### Database Changes
+
+- Added nullable `supplier_email_drafts.provider`, `provider_message_id`, `sent_by`, and `send_error_category`.
+- Reuses existing `status`, `sent_at`, `approved_by`, `approved_at`, `qwen_model`, `qwen_metadata`, `delivery_status`, `delivery_provider`, `delivery_metadata`, and `last_delivery_attempt_at`.
+
+### Permission Changes
+
+- No role model changes. The Resend route is authenticated and admin-only.
+- Staff cannot send supplier email drafts through Resend.
+
+### Known Limitations
+
+- Resend acceptance is recorded as `accepted`; inbox delivery is not claimed until a future delivery webhook confirms it.
+- In `RESEND_TEST_MODE=true`, the linked supplier email must match `RESEND_TEST_RECIPIENT`.
+
+### Next Steps
+
+- Run the new migration in deployed environments.
+- Configure `RESEND_API_KEY`, keep `REAL_EMAIL_ENABLED=true` only after review, and send one controlled test draft to `bakerytinghao@outlook.com`.
+- Add webhook handling later if delivery/bounce/open status should update `delivery_status` after Resend acceptance.
+
 ## 2026-07-19 - Agent Audit Milestone Simplification
 
 ### Summary

@@ -4,6 +4,10 @@ Last reviewed: 2026-07-19
 
 This document identifies what the project already has now, based on the actual Laravel files in the repository. It separates implemented functions from planned features so the next development work can be chosen clearly.
 
+2026-07-19 verification note: supplier email feature tests explicitly isolate demo Mark Sent and Resend test mode through Laravel config overrides; no production workflow or permission behavior changed.
+
+2026-07-19 restock safety note: Laravel validates bounded Qwen stop actions against mission state and records rejected premature stops without bypassing duplicate, expiry, supplier, or human-approval guardrails.
+
 ## 1. Project Status Summary
 
 The project is currently a Laravel 13 application with:
@@ -206,7 +210,7 @@ Current functions:
 
 Current limitations:
 
-- Creates purchase order drafts and supplier email drafts only; it does not send real supplier messages.
+- Creates purchase order drafts and supplier email drafts only; the agent loop does not send real supplier messages.
 - Does not send WhatsApp messages or live supplier emails.
 - Human-in-the-loop approval is implemented for pending agent PO drafts.
 - Mock parsing is deterministic and intentionally lightweight for demos.
@@ -345,7 +349,8 @@ Implemented routes:
 | PATCH | `/supplier-returns/{supplierReturn}` | `supplier-returns.update` | Admin updates supplier return status/reason |
 | GET | `/supplier-email-drafts/{supplierEmailDraft}` | `supplier-email-drafts.show` | Show generated supplier email draft |
 | POST | `/supplier-email-drafts/{supplierEmailDraft}/approve` | `supplier-email-drafts.approve` | Approve supplier email draft |
-| POST | `/supplier-email-drafts/{supplierEmailDraft}/mark-sent` | `supplier-email-drafts.mark-sent` | Mark supplier email draft sent for demo |
+| POST | `/supplier-email-drafts/{supplierEmailDraft}/mark-sent` | `supplier-email-drafts.mark-sent` | Mark supplier email draft sent for demo when real email is disabled |
+| POST | `/supplier-email-drafts/{supplierEmailDraft}/send-resend` | `supplier-email-drafts.send-resend` | Admin sends approved draft through Resend after explicit confirmation |
 | POST | `/supplier-email-drafts/{supplierEmailDraft}/regenerate` | `supplier-email-drafts.regenerate` | Regenerate a draft-status supplier email draft |
 | GET | `/purchase-order-demo` | `po-demo.index` | Show purchase order demo list |
 | GET | `/purchase-order-demo/create` | `po-demo.create` | Show demo purchase order form |
@@ -436,13 +441,13 @@ Purchase order permissions:
 - Staff can view purchase orders they requested.
 - Admin can create, edit, delete, prepare or record supplier email steps, confirm sent purchase orders, receive goods, record allocation/damage/shortage, manage supplier returns, and close real purchase orders.
 - Admin can approve or reject agent-created purchase order drafts.
-- Admin can generate, regenerate, approve, and mark supplier email drafts sent for demo.
+- Admin can generate, regenerate, approve, mark supplier email drafts sent for demo, or explicitly send approved drafts through Resend when real delivery is enabled.
 - Existing supplier email drafts are reused instead of calling Qwen again.
 - Staff Dashboard Autopilot Actions and Agent Audit summary cards do not link staff to other users' PO approval or supplier email draft records.
 - Assigned staff can receive goods and record allocation/damage/shortage for their requested purchase orders.
 - Receiving is status-gated to confirmed and partially received purchase orders for both admin and assigned staff.
 - Staff cannot close real purchase orders or update supplier return statuses.
-- Staff cannot generate, regenerate, approve, or mark supplier email drafts sent.
+- Staff cannot generate, regenerate, approve, mark sent, or send supplier email drafts through Resend.
 - Admin and Staff can view purchase order demo records.
 - Admin can create, send demo email, confirm supplier, and close demo purchase orders.
 - Admin and Staff can receive demo purchase order stock.
@@ -574,7 +579,7 @@ Current database limitations:
 - No roles or permissions tables.
 - No full GRN table.
 - Full GRN document generation is not implemented yet.
-- TingHao Agent creates pending-approval PO drafts and demo-safe supplier email drafts but does not send real supplier communications.
+- TingHao Agent creates pending-approval PO drafts and approval-gated supplier email drafts but does not send real supplier communications from the agent loop.
 - TingHao Agent expiry loss prevention scans use real inventory expiry, quantity, and cost fields.
 
 Performance notes:
@@ -828,13 +833,14 @@ The shared language selector reserves a dedicated header area on dashboard pages
 - Restock quantity uses valid FastAPI output or `max(minimum_stock * 2 - current_quantity, minimum_stock)`, accounts for pending quantity, and remains positive before a draft can be created.
 - `AUTOPILOT_PO_DRAFT_ENABLED=false` is the default. When enabled, only predictions meeting `AUTOPILOT_MINIMUM_CONFIDENCE` can create one non-duplicate `pending_approval` PO draft.
 - Supplier email subject/body can be edited by admin. Editing an approved draft returns it to `draft` and requires approval again.
-- `REAL_EMAIL_ENABLED=false` keeps demo-safe Mark Email as Sent. When enabled and Gmail SMTP is valid, only an admin can explicitly send an approved draft linked to an approved PO.
+- `REAL_EMAIL_ENABLED=false` keeps demo-safe Mark Email as Sent. When enabled and Resend is configured, only an admin can explicitly send an approved draft linked to an approved PO.
+- `RESEND_TEST_MODE=true` permits only `RESEND_TEST_RECIPIENT`, uses `onboarding@resend.dev`, labels the UI as Resend Test Mode, and stores only safe acceptance or failure metadata.
 - Delivery outcome stores safe provider status and timestamps. Supplier confirmation, receiving totals including damage/return/shortage, and PO closure append tool evidence to the linked AgentRun.
 - `/agent` and `/demo` show the compact real-record Phase 1 capability map. Staff `/agent` evidence is scoped to their own runs and requested POs.
 
 ## Supplier Email Draft Legacy Schema Compatibility (2026-07-19)
 
-- Admin draft edits, demo-safe Mark Email as Sent, and explicit Gmail delivery preserve their core state changes when a legacy deployment does not yet have the nullable delivery-audit columns.
+- Admin draft edits, demo-safe Mark Email as Sent, and explicit Resend delivery preserve their core state changes when a legacy deployment does not yet have the nullable delivery-audit columns.
 - The optional `delivery_status`, `delivery_provider`, `delivery_metadata`, and `last_delivery_attempt_at` fields are written only after their migration exists. This avoids a 500 error without relaxing the admin-only workflow.
 - Applying `2026_07_18_000001_add_delivery_audit_to_supplier_email_drafts.php` remains required for persisted delivery evidence.
 
