@@ -75,6 +75,7 @@ class ResendSupplierMailService
         try {
             $this->assertSendable($draft, $admin, $testMode);
             $recipient = $this->recipientFor($draft, $testMode);
+            $intendedRecipient = (string) $draft->supplier->email;
             $sentAt = now();
             $response = Resend::emails()->send($this->payloadFor($draft, $recipient, $testMode), [
                 'idempotency_key' => "supplier-email-draft-{$draft->id}",
@@ -85,7 +86,7 @@ class ResendSupplierMailService
                 throw new DomainException('Resend accepted the request without returning an email ID.');
             }
 
-            DB::transaction(function () use ($draft, $purchaseOrder, $admin, $sentAt, $messageId, $recipient, $testMode): void {
+            DB::transaction(function () use ($draft, $purchaseOrder, $admin, $sentAt, $messageId, $recipient, $intendedRecipient, $testMode): void {
                 $this->updateExistingDraftColumns($draft, [
                     'status' => SupplierEmailDraft::STATUS_SENT,
                     'provider' => 'resend',
@@ -97,6 +98,7 @@ class ResendSupplierMailService
                         'result' => 'accepted_by_resend',
                         'test_mode' => $testMode,
                         'recipient' => $this->maskEmail($recipient),
+                        'intended_recipient' => $this->maskEmail($intendedRecipient),
                     ],
                     'sent_at' => $sentAt,
                     'sent_by' => $admin->id,
@@ -107,7 +109,7 @@ class ResendSupplierMailService
                 $purchaseOrder?->update([
                     'status' => PurchaseOrder::STATUS_SENT,
                     'sent_at' => $sentAt,
-                    'email_to' => $recipient,
+                    'email_to' => $intendedRecipient,
                 ]);
             });
 
@@ -115,12 +117,19 @@ class ResendSupplierMailService
                 $this->audit->record(
                     $purchaseOrder,
                     'send_supplier_email_resend',
-                    ['supplier_email_draft_id' => $draft->id, 'approved_by' => $admin->id],
+                    [
+                        'supplier_email_draft_id' => $draft->id,
+                        'approved_by' => $admin->id,
+                        'intended_recipient' => $this->maskEmail($intendedRecipient),
+                        'actual_recipient' => $this->maskEmail($recipient),
+                    ],
                     [
                         'delivery_status' => SupplierEmailDraft::DELIVERY_ACCEPTED,
                         'provider' => 'resend',
                         'provider_message_id' => $messageId,
                         'test_mode' => $testMode,
+                        'intended_recipient' => $this->maskEmail($intendedRecipient),
+                        'actual_recipient' => $this->maskEmail($recipient),
                     ],
                     'Supplier email sent through Resend',
                     'Approved supplier email was sent through Resend after admin confirmation.'
@@ -169,6 +178,12 @@ class ResendSupplierMailService
             throw new DomainException('The supplier does not have a valid email address.');
         }
 
+        $actualRecipient = $this->recipientFor($draft, $testMode);
+
+        if (! filter_var($actualRecipient, FILTER_VALIDATE_EMAIL)) {
+            throw new DomainException('Resend recipient is not configured correctly.');
+        }
+
         if (! filter_var($this->fromAddress($testMode), FILTER_VALIDATE_EMAIL)) {
             throw new DomainException('Resend sender address is not configured.');
         }
@@ -177,9 +192,6 @@ class ResendSupplierMailService
             throw new DomainException('Resend API key is not configured.');
         }
 
-        if ($testMode && strcasecmp((string) $draft->supplier->email, (string) config('autopilot.resend_test_recipient', '')) !== 0) {
-            throw new DomainException('Resend test mode only permits sending to the configured test recipient.');
-        }
     }
 
     private function payloadFor(SupplierEmailDraft $draft, string $recipient, bool $testMode): array

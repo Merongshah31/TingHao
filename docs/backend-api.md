@@ -6,6 +6,8 @@ This document explains the current Laravel backend surface for Ting Hao and the 
 
 2026-07-19 test isolation note: feature tests set `autopilot.real_email_enabled`, Resend test-mode, and fake provider credentials through `config([...])`; backend routes never read test behavior from local `.env` values during automated verification.
 
+2026-07-20 Resend note: test-mode send payloads use only the configured test recipient; masked intended and actual recipients are retained in safe PO delivery metadata and agent audit payloads.
+
 2026-07-19 restock decision-loop note: PredictionRestockPlanningService now exposes state-based allowed actions, rejects premature stop selections, records safe rejection metadata, and falls back to the required Laravel action.
 
 ## 1. Backend Architecture

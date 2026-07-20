@@ -10,6 +10,12 @@ Track pending work and future improvements here. Move items into `docs/CHANGELOG
 - [x] Cover both demo Mark Sent and Resend test-mode PO detail actions without using local `.env` values.
 - [x] Keep the high-confidence autopilot draft scenario covered with duplicate and safety guardrails intact.
 
+## Completed Resend Recipient Separation (2026-07-20)
+
+- [x] Route test-mode sends only to the configured test recipient.
+- [x] Preserve intended supplier recipient in PO and safe audit metadata.
+- [x] Cover invalid test recipient and production supplier routing.
+
 ## Completed Bounded Restock Stop Safety (2026-07-19)
 
 - [x] Reject premature Qwen stops before required workflow checks.

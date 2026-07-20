@@ -6,6 +6,8 @@ This guide documents current UI pages, main actions, role visibility, and design
 
 2026-07-19 verification note: PO detail coverage now checks both mutually exclusive delivery states: demo mode shows Mark Email as Sent and hides Resend; Resend test mode shows Send Test Email via Resend and hides Mark Email as Sent.
 
+2026-07-20 Resend note: test-mode UI may identify the configured test recipient, while supplier email remains the intended business recipient and is never used as the provider destination in test mode.
+
 2026-07-19 audit note: the Agent workflow view can show a rejected premature stop and Laravel's deterministic fallback while the mission continues through its required checkpoint.
 
 ## Design Direction

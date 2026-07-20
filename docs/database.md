@@ -6,6 +6,8 @@ This document records the current database tables, important fields, relationshi
 
 2026-07-19 test isolation note: no schema or stored-record behavior changed. The compatibility test continues to verify that draft status, `sent_at`, and purchase-order status update correctly when optional delivery-audit columns are absent.
 
+2026-07-20 Resend note: no schema change. Existing delivery metadata and agent audit payloads store masked intended and actual recipient values.
+
 2026-07-19 restock decision-loop note: no schema change. Rejected Qwen stop actions use existing agent tool call output metadata and reasoning-step summaries.
 
 2026-07-08 sidebar navigation hardening note: no database tables, fields, relationships, status values, or migrations changed.

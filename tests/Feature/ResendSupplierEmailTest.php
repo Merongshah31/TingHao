@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\AgentRun;
+use App\Models\AgentToolCall;
 use App\Models\Ingredient;
 use App\Models\PurchaseOrder;
 use App\Models\Supplier;
@@ -61,21 +62,92 @@ class ResendSupplierEmailTest extends TestCase
         $this->assertSame(SupplierEmailDraft::STATUS_APPROVED, $draft->fresh()->status);
     }
 
-    public function test_resend_test_mode_rejects_non_test_supplier_recipient(): void
+    public function test_resend_test_mode_overrides_supplier_email_with_configured_test_recipient(): void
     {
         config($this->resendConfig());
+        $resendEmails = $this->fakeResendEmails('re_test_override');
+        Resend::shouldReceive('emails')->once()->andReturn($resendEmails);
         $admin = $this->user(User::ROLE_ADMIN);
         [, $draft] = $this->approvedEmailWorkflow($admin, supplierEmail: 'orders@example.test');
 
         $this->actingAs($admin)
             ->post(route('supplier-email-drafts.send-resend', $draft))
             ->assertRedirect()
-            ->assertSessionHasErrors('supplier_email_draft');
+            ->assertSessionHas('status');
 
         $draft->refresh();
-        $this->assertSame(SupplierEmailDraft::STATUS_APPROVED, $draft->status);
-        $this->assertSame(SupplierEmailDraft::DELIVERY_FAILED, $draft->delivery_status);
-        $this->assertSame('resend', $draft->provider);
+        $this->assertSame(SupplierEmailDraft::STATUS_SENT, $draft->status);
+        $this->assertSame(['bakerytinghao@outlook.com'], data_get($resendEmails->sent, '0.parameters.to'));
+        $this->assertSame('orders@example.test', $draft->purchaseOrder->fresh()->email_to);
+        $this->assertSame('or***@example.test', data_get($draft->delivery_metadata, 'intended_recipient'));
+        $this->assertSame('ba***@outlook.com', data_get($draft->delivery_metadata, 'recipient'));
+    }
+
+    public function test_resend_test_mode_never_sends_to_supplier_email(): void
+    {
+        config($this->resendConfig());
+        $resendEmails = $this->fakeResendEmails('re_test_safety');
+        Resend::shouldReceive('emails')->once()->andReturn($resendEmails);
+        $admin = $this->user(User::ROLE_ADMIN);
+        [, $draft] = $this->approvedEmailWorkflow($admin, supplierEmail: 'supplier-real@example.test');
+
+        $this->actingAs($admin)->post(route('supplier-email-drafts.send-resend', $draft));
+
+        $this->assertNotSame(['supplier-real@example.test'], data_get($resendEmails->sent, '0.parameters.to'));
+        $this->assertSame(['bakerytinghao@outlook.com'], data_get($resendEmails->sent, '0.parameters.to'));
+    }
+
+    public function test_missing_or_invalid_test_recipient_is_blocked(): void
+    {
+        config($this->resendConfig(['autopilot.resend_test_recipient' => 'not-an-email']));
+        $admin = $this->user(User::ROLE_ADMIN);
+        [, $draft] = $this->approvedEmailWorkflow($admin, supplierEmail: 'supplier-real@example.test');
+
+        $this->actingAs($admin)
+            ->post(route('supplier-email-drafts.send-resend', $draft))
+            ->assertRedirect()
+            ->assertSessionHasErrors('supplier_email_draft');
+
+        $this->assertSame(SupplierEmailDraft::STATUS_APPROVED, $draft->fresh()->status);
+    }
+
+    public function test_production_mode_uses_supplier_email(): void
+    {
+        config($this->resendConfig([
+            'autopilot.resend_test_mode' => false,
+            'autopilot.resend_from_address' => 'verified@tinghao.example',
+        ]));
+        $resendEmails = $this->fakeResendEmails('re_production');
+        Resend::shouldReceive('emails')->once()->andReturn($resendEmails);
+        $admin = $this->user(User::ROLE_ADMIN);
+        [, $draft] = $this->approvedEmailWorkflow($admin, supplierEmail: 'supplier-real@example.test');
+
+        $this->actingAs($admin)->post(route('supplier-email-drafts.send-resend', $draft));
+
+        $this->assertSame(['supplier-real@example.test'], data_get($resendEmails->sent, '0.parameters.to'));
+        $this->assertSame('supplier-real@example.test', $draft->purchaseOrder->fresh()->email_to);
+    }
+
+    public function test_intended_and_actual_recipients_are_audited_safely(): void
+    {
+        config($this->resendConfig());
+        $resendEmails = $this->fakeResendEmails('re_audit');
+        Resend::shouldReceive('emails')->once()->andReturn($resendEmails);
+        $admin = $this->user(User::ROLE_ADMIN);
+        [$purchaseOrder, $draft] = $this->approvedEmailWorkflow($admin, supplierEmail: 'supplier-real@example.test');
+
+        $this->actingAs($admin)->post(route('supplier-email-drafts.send-resend', $draft));
+
+        $audit = AgentToolCall::query()
+            ->where('agent_run_id', $purchaseOrder->agent_run_id)
+            ->where('tool_name', 'send_supplier_email_resend')
+            ->firstOrFail();
+        $this->assertSame('su***@example.test', data_get($audit->input_payload, 'intended_recipient'));
+        $this->assertSame('ba***@outlook.com', data_get($audit->input_payload, 'actual_recipient'));
+        $this->assertSame('su***@example.test', data_get($audit->output_payload, 'intended_recipient'));
+        $this->assertSame('ba***@outlook.com', data_get($audit->output_payload, 'actual_recipient'));
+        $this->assertStringNotContainsString('supplier-real@example.test', json_encode($audit->input_payload));
+        $this->assertStringNotContainsString('supplier-real@example.test', json_encode($audit->output_payload));
     }
 
     public function test_admin_approved_test_draft_sends_through_resend_and_stores_safe_audit(): void
@@ -85,7 +157,7 @@ class ResendSupplierEmailTest extends TestCase
         Resend::shouldReceive('emails')->once()->andReturn($resendEmails);
 
         $admin = $this->user(User::ROLE_ADMIN);
-        [$purchaseOrder, $draft] = $this->approvedEmailWorkflow($admin);
+        [$purchaseOrder, $draft] = $this->approvedEmailWorkflow($admin, supplierEmail: 'orders@example.test');
 
         $this->actingAs($admin)
             ->post(route('supplier-email-drafts.send-resend', $draft))
@@ -99,7 +171,7 @@ class ResendSupplierEmailTest extends TestCase
         $this->assertSame(SupplierEmailDraft::DELIVERY_ACCEPTED, $draft->delivery_status);
         $this->assertSame($admin->id, $draft->sent_by);
         $this->assertSame(PurchaseOrder::STATUS_SENT, $purchaseOrder->fresh()->status);
-        $this->assertSame('bakerytinghao@outlook.com', $purchaseOrder->fresh()->email_to);
+        $this->assertSame('orders@example.test', $purchaseOrder->fresh()->email_to);
         $this->assertSame('Bakery TingHao Procurement <onboarding@resend.dev>', data_get($resendEmails->sent, '0.parameters.from'));
         $this->assertSame(['bakerytinghao@outlook.com'], data_get($resendEmails->sent, '0.parameters.to'));
         $this->assertSame('supplier-email-draft-'.$draft->id, data_get($resendEmails->sent, '0.options.idempotency_key'));

@@ -6,6 +6,8 @@ This document identifies what the project already has now, based on the actual L
 
 2026-07-19 verification note: supplier email feature tests explicitly isolate demo Mark Sent and Resend test mode through Laravel config overrides; no production workflow or permission behavior changed.
 
+2026-07-20 Resend note: test-mode delivery separates the intended supplier recipient from the actual configured test recipient; production delivery uses the linked supplier email.
+
 2026-07-19 restock safety note: Laravel validates bounded Qwen stop actions against mission state and records rejected premature stops without bypassing duplicate, expiry, supplier, or human-approval guardrails.
 
 ## 1. Project Status Summary

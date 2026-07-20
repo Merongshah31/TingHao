@@ -2,6 +2,38 @@
 
 Record every system update in chronological order. Each entry should be simple enough for future developers and stakeholders to understand what changed.
 
+## 2026-07-20 - Resend Test Recipient Separation
+
+### Summary
+
+Resend test mode now sends only to the configured test recipient while preserving the linked supplier email as the intended business recipient in PO and audit context. Production mode continues to send to the linked supplier.
+
+### Files Changed
+
+- app/Services/Mail/ResendSupplierMailService.php
+- tests/Feature/ResendSupplierEmailTest.php
+- Required documentation files in docs/
+
+### Routes Added Or Changed
+
+- None.
+
+### Database Changes
+
+- None. Existing delivery metadata and audit payloads now distinguish masked intended and actual recipients.
+
+### Permission Changes
+
+- None.
+
+### Known Limitations
+
+- Test mode uses the configured Resend test recipient and does not represent supplier inbox delivery.
+
+### Next Steps
+
+- Keep Resend test mode enabled until the production sender domain is verified.
+
 ## 2026-07-19 - Bounded Restock Stop Validation
 
 ### Summary

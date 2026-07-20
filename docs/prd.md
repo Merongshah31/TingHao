@@ -2,6 +2,8 @@
 
 Last updated: 2026-07-19
 
+2026-07-20 email safety requirement: Resend test mode must never send to a supplier address and must preserve the supplier as the intended business recipient for audit context.
+
 2026-07-19 safety requirement: an autopilot restock mission cannot terminate before required duplicate, supplier, draft, and human-approval checkpoints are completed.
 
 ## 1. Product Summary
