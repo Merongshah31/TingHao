@@ -236,3 +236,5 @@ Track pending work and future improvements here. Move items into `docs/CHANGELOG
 - [x] Collapse the static capability map and reduce the visible live audit to seven milestones.
 - [x] Show one selected detail panel with source badges and relevant fields only.
 - [ ] Capture final desktop/mobile screenshots using a live FastAPI restock run to demonstrate the FastAPI Prediction badge.
+- [ ] Connect `StructuredDecisionProvider` to the future Procurement Scenario Comparison service after its workflow contract is defined.
+- [ ] Add an explicitly approved workflow entry point for GPT procurement reviews when product scope is finalized.

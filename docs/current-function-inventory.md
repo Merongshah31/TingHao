@@ -870,3 +870,14 @@ The shared language selector reserves a dedicated header area on dashboard pages
 - Audit activity is grouped into at most seven milestones: Trigger Received, Request Interpreted, Inventory and Prediction Checked, Reorder and Supplier Decided, PO Draft Prepared, Human Approval, and Supplier Action and Audit Completed.
 - One Selected Step Details panel shows only populated result, action, decision, confidence, approval, reason, tool, reviewer, and record fields for the clicked milestone.
 - Individual tool IDs/names/statuses remain under collapsed Technical Audit Details, with the full run audit still available at `/agent/runs/{agentRun}`.
+# AI Provider Architecture (2026-07-21)
+
+- Added `StructuredDecisionProvider` as a provider-neutral structured JSON contract.
+- `QwenStructuredProvider` delegates to the existing `QwenClient`.
+- `OpenAIClient` supports environment-configured GPT-5.6 Responses API calls and safe mock mode.
+- No existing workflow currently selects or invokes the new provider contract.
+# GPT Procurement Review (2026-07-21)
+
+- `GptProcurementReviewService` prepares structured procurement context and validates provider recommendations.
+- It reuses `SupplierComparisonService` and always returns `human_approval_required=true`.
+- It performs no procurement mutations or external delivery actions.

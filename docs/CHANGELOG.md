@@ -2328,3 +2328,30 @@ Added a required documentation workflow for Codex/AI coding agents so every syst
 ### Next Steps
 
 - Run the manual four-width browser checklist and capture final demo screenshots with representative admin and staff records.
+- 2026-07-21 — AI provider architecture preparation
+  - Feature/module updated: AI provider abstraction.
+  - Summary: Added a provider contract, Qwen adapter, and environment-configured OpenAI GPT-5.6 client. Existing Qwen and procurement workflows are unchanged.
+  - Files changed: `app/Contracts/AI/StructuredDecisionProvider.php`, `app/Services/AI/QwenStructuredProvider.php`, `app/Services/OpenAI/OpenAIClient.php`, `config/ai.php`, `.env.example`.
+  - Routes added/changed: None.
+  - Database changes: None.
+  - Permission changes: None.
+  - Known limitations: The new provider is not wired into an existing workflow yet; OpenAI mock mode is enabled by default.
+  - Next steps: Inject the contract into a future procurement scenario service when that feature is implemented.
+- 2026-07-21 — AI provider selection binding
+  - Feature/module updated: AI provider foundation.
+  - Summary: Bound the structured decision provider contract to Qwen by default or OpenAI when `AI_PROVIDER=openai`, with focused resolution coverage.
+  - Files changed: `app/Providers/AppServiceProvider.php`, `tests/Unit/AIProviderResolutionTest.php`.
+  - Routes added/changed: None.
+  - Database changes: None.
+  - Permission changes: None.
+  - Known limitations: The provider contract is not connected to existing procurement workflows.
+  - Next steps: Use the contract from the future Procurement Scenario Comparison service.
+- 2026-07-21 — GPT procurement review service
+  - Feature/module updated: Procurement AI review foundation.
+  - Summary: Added a provider-backed, validation-only procurement review service using existing supplier comparisons. Human approval is always required.
+  - Files changed: `app/Services/Procurement/GptProcurementReviewService.php`, `tests/Unit/GptProcurementReviewServiceTest.php`.
+  - Routes added/changed: None.
+  - Database changes: None.
+  - Permission changes: None.
+  - Known limitations: The service does not create POs, alter stock, send email, or expose a route.
+  - Next steps: Integrate only through a future reviewed procurement scenario workflow.

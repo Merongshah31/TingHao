@@ -346,3 +346,9 @@ The language selector now occupies a reserved area in the dashboard header and n
 - One Selected Step Details panel updates with populated fields only; empty decision, confidence, and approval rows are omitted.
 - Actor badges: Qwen Decision uses violet, FastAPI Prediction uses blue, Laravel Tool uses green, Human Approval uses amber, and System Audit uses gray.
 - Milestones use four columns at 920px, two at 720px, and one at 440px. Technical Audit Details remains collapsed.
+# AI Provider Architecture (2026-07-21)
+
+No UI, routes, pages, actions, or permission visibility changed. The provider architecture is internal and currently has no user-facing controls.
+# GPT Procurement Review (2026-07-21)
+
+No UI, page, wording, or route changes were made.

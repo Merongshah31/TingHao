@@ -734,3 +734,9 @@ Resend success uses `delivery_status = accepted`, not delivered, because inbox d
 - No schema change. Seven UI milestones group existing `agent_tool_calls` by tool name and `agent_reasoning_steps` by step type/related tool.
 - Agent mission status remains `agent_runs.status`; procurement status is read separately from `purchase_orders.status`, `approval_requests.status`, expiry recommendation status, or a stored decision-loop stop reason.
 - Tool payloads remain stored unchanged but are not rendered in the default milestone view.
+# AI Provider Architecture (2026-07-21)
+
+No database tables, fields, relationships, or migrations were added. Future provider calls can reuse the existing agent audit records when a workflow is implemented.
+# GPT Procurement Review (2026-07-21)
+
+No database changes were made. Review output is returned in memory and does not store chain-of-thought.

@@ -1041,3 +1041,14 @@ No backend route or language-switch behavior changed. The dashboard language sel
 - `summary.agent_status` is independent from `summary.procurement_status`, which is derived from real PO, approval, expiry review, or decision-loop stop evidence.
 - Optional milestone details are filtered server-side, so empty decision, confidence, approval, reviewer, or tool fields are not rendered.
 - No Qwen or FastAPI request is made by `GET /agent`; the page reads persisted records only.
+# AI Provider Architecture (2026-07-21)
+
+- No routes or controllers were added.
+- `App\Contracts\AI\StructuredDecisionProvider` defines the internal `generateJson` contract for future services.
+- `App\Services\AI\QwenStructuredProvider` preserves the existing Qwen response shape.
+- `App\Services\OpenAI\OpenAIClient` uses `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `OPENAI_MODEL`, `OPENAI_MOCK_MODE`, and `OPENAI_TIMEOUT`.
+# GPT Procurement Review (2026-07-21)
+
+- No route or controller was added.
+- `GptProcurementReviewService` is an internal service that accepts ingredient stock, usage, pending PO, supplier comparison, and optional prediction context.
+- Invalid provider output returns a safe non-actionable fallback.

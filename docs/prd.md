@@ -950,3 +950,9 @@ The shared header must keep language selection visually separate from Admin/prof
 - The business path must contain no more than seven milestones and one selected detail panel.
 - Actor labels must distinguish Qwen Decision, FastAPI Prediction, Laravel Tool, Human Approval, and System Audit without claiming actors absent from the recorded run.
 - Technical tool-call granularity remains available in a collapsed audit disclosure.
+# AI Provider Architecture (2026-07-21)
+
+The system now has an internal extension point for future Procurement Scenario Comparison work. Qwen remains the existing provider and is not replaced. OpenAI GPT-5.6 support is prepared but not exposed in the UI or connected to procurement workflows.
+# GPT Procurement Review (2026-07-21)
+
+The backend foundation can produce a concise, structured procurement review while preserving human approval. It is not currently exposed in the application workflow or UI.
