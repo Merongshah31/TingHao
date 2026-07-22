@@ -156,6 +156,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/stock-planner/ingredient/{ingredient}/explain', [StockPlannerController::class, 'explain'])
         ->middleware('role:admin,staff')
         ->name('stock-planner.explain');
+    Route::post('/stock-planner/ingredient/{ingredient}/gpt-review', [StockPlannerController::class, 'gptReview'])
+        ->middleware('role:admin,staff')
+        ->name('stock-planner.gpt-review');
     Route::post('/stock-planner/ingredient/{ingredient}/plan-restock', [StockPlannerController::class, 'planRestock'])
         ->middleware('role:admin,staff')
         ->name('stock-planner.plan-restock');

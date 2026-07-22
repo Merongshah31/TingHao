@@ -956,3 +956,6 @@ The system now has an internal extension point for future Procurement Scenario C
 # GPT Procurement Review (2026-07-21)
 
 The backend foundation can produce a concise, structured procurement review while preserving human approval. It is not currently exposed in the application workflow or UI.
+# GPT-5.6 Review (2026-07-21)
+
+Add an advisory procurement review to the existing Stock Planner detail page. The review must remain human-approved and must not directly create or approve procurement actions.

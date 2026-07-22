@@ -1052,3 +1052,9 @@ No backend route or language-switch behavior changed. The dashboard language sel
 - No route or controller was added.
 - `GptProcurementReviewService` is an internal service that accepts ingredient stock, usage, pending PO, supplier comparison, and optional prediction context.
 - Invalid provider output returns a safe non-actionable fallback.
+# GPT-5.6 Review (2026-07-21)
+
+- `POST /stock-planner/ingredient/{ingredient}/gpt-review`
+- Controller: `StockPlannerController@gptReview`
+- Middleware: `auth`, `role:admin,staff`
+- Behavior: Reuses prediction input, pending purchase orders, and supplier comparison data, then redirects to the ingredient prediction page with the validated advisory result.

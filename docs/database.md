@@ -740,3 +740,6 @@ No database tables, fields, relationships, or migrations were added. Future prov
 # GPT Procurement Review (2026-07-21)
 
 No database changes were made. Review output is returned in memory and does not store chain-of-thought.
+# GPT-5.6 Review (2026-07-21)
+
+No tables, fields, relationships, or migrations were added. Review results are passed through the session for page display.

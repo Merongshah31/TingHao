@@ -2355,3 +2355,12 @@ Added a required documentation workflow for Codex/AI coding agents so every syst
   - Permission changes: None.
   - Known limitations: The service does not create POs, alter stock, send email, or expose a route.
   - Next steps: Integrate only through a future reviewed procurement scenario workflow.
+- 2026-07-21 — GPT-5.6 Review in Stock Planner
+  - Feature/module updated: Stock Planner ingredient prediction detail.
+  - Summary: Added an inline GPT-5.6 Review action and result panel. Reviews remain advisory and require human approval.
+  - Files changed: `app/Http/Controllers/StockPlannerController.php`, `routes/web.php`, `resources/views/stock-planner/show.blade.php`, `tests/Feature/GptProcurementReviewTest.php`.
+  - Routes added/changed: Added `POST /stock-planner/ingredient/{ingredient}/gpt-review` for admin/staff users.
+  - Database changes: None.
+  - Permission changes: Existing `admin,staff` role middleware applies; no new permission model was added.
+  - Known limitations: The review does not create POs, modify stock, or send email.
+  - Next steps: Keep any future procurement execution behind existing approval workflows.

@@ -352,3 +352,9 @@ No UI, routes, pages, actions, or permission visibility changed. The provider ar
 # GPT Procurement Review (2026-07-21)
 
 No UI, page, wording, or route changes were made.
+# GPT-5.6 Review (2026-07-21)
+
+- Page: existing Stock Planner ingredient prediction detail.
+- Action: `Run GPT-5.6 Review` appears alongside existing prediction actions for authorized users.
+- Result: Inline review panel with recommendation evidence and a clear `Human approval required` notice.
+- No standalone page, automatic PO action, stock update, or email action was added.

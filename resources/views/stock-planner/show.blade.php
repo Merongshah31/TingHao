@@ -12,6 +12,7 @@
     $hasPendingPurchaseOrder = $pendingPoQuantity > 0;
     $pendingPurchaseOrder = $restockAvailability['pending_purchase_order'] ?? null;
     $supplierComparison = $restockAvailability['supplier_comparison'] ?? null;
+    $gptReview = session('gpt_review');
 @endphp
 
 @section('content')
@@ -142,6 +143,10 @@
                     @elseif (($prediction['recommended_action'] ?? null) === 'monitor')
                         <span class="stock-advice-static">Continue monitoring stock movement.</span>
                     @endif
+                    <form method="post" action="{{ route('stock-planner.gpt-review', $ingredient) }}">
+                        @csrf
+                        <button type="submit" class="btn btn-muted">Run GPT-5.6 Review</button>
+                    </form>
                 </div>
             </article>
 
@@ -217,6 +222,29 @@
                     </table>
                 </div>
                 <p class="field-help">The first-ranked supplier is used for the draft. Admin can choose another supplier on the purchase order edit page before approval.</p>
+            </section>
+        @endif
+
+        @if (is_array($gptReview))
+            <section class="info-panel gpt-review-panel">
+                <div class="section-heading-row">
+                    <div>
+                        <p class="eyebrow">GPT-5.6 Review</p>
+                        <h2>Procurement Scenario Review</h2>
+                    </div>
+                    <span class="status-pill warning">Human approval required</span>
+                </div>
+                <dl class="stock-prediction-input-list">
+                    <div><dt>Recommended Supplier</dt><dd>{{ $gptReview['recommended_supplier_id'] ? ($supplierComparison['suppliers'][collect($supplierComparison['suppliers'] ?? [])->search(fn ($supplier) => (int) ($supplier['id'] ?? 0) === (int) $gptReview['recommended_supplier_id'])]['name'] ?? 'Supplier '.$gptReview['recommended_supplier_id']) : 'No eligible supplier' }}</dd></div>
+                    <div><dt>Recommended Quantity</dt><dd>{{ $gptReview['recommended_quantity'] > 0 ? QuantityFormatter::format($gptReview['recommended_quantity'], $cleanUnit) : 'No safe quantity' }}</dd></div>
+                    <div><dt>Risk Level</dt><dd>{{ ucfirst($gptReview['risk_level']) }}</dd></div>
+                    <div><dt>Confidence</dt><dd>{{ number_format($gptReview['confidence'] * 100, 0) }}%</dd></div>
+                    <div><dt>Reasoning Summary</dt><dd>{{ $gptReview['reasoning_summary'] }}</dd></div>
+                    <div><dt>Cost Observation</dt><dd>{{ $gptReview['cost_observation'] ?: 'Not provided' }}</dd></div>
+                    <div><dt>Delivery Risk</dt><dd>{{ $gptReview['delivery_risk'] ?: 'Not provided' }}</dd></div>
+                    <div><dt>Stockout Risk</dt><dd>{{ $gptReview['stockout_risk'] ?: 'Not provided' }}</dd></div>
+                </dl>
+                <div class="stock-safety-alert warning"><strong>Human approval required</strong><span>This review does not create or approve a purchase order.</span></div>
             </section>
         @endif
 

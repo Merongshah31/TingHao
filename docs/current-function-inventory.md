@@ -881,3 +881,8 @@ The shared language selector reserves a dedicated header area on dashboard pages
 - `GptProcurementReviewService` prepares structured procurement context and validates provider recommendations.
 - It reuses `SupplierComparisonService` and always returns `human_approval_required=true`.
 - It performs no procurement mutations or external delivery actions.
+# GPT-5.6 Review (2026-07-21)
+
+- Stock Planner ingredient prediction detail now provides an inline GPT-5.6 Review action.
+- The review displays supplier, quantity, risk, concise reasoning, cost, delivery, stockout risk, confidence, and a human-approval notice.
+- Admin and staff can run the review; no purchase order or stock mutation occurs.

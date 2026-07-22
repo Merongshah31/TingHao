@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Ingredient;
 use App\Services\Agent\PredictionRestockPlanningService;
 use App\Services\Agent\StockPredictionReasoningService;
+use App\Services\Procurement\GptProcurementReviewService;
 use App\Services\Stock\StockPredictionApiClient;
 use App\Services\Stock\StockPredictionInputBuilder;
 use App\Support\StockPlannerDisplay;
@@ -23,6 +24,7 @@ class StockPlannerController extends Controller
         private readonly StockPredictionInputBuilder $inputBuilder,
         private readonly StockPredictionReasoningService $reasoningService,
         private readonly PredictionRestockPlanningService $planningService,
+        private readonly GptProcurementReviewService $gptReviewService,
     ) {
     }
 
@@ -112,6 +114,52 @@ class StockPlannerController extends Controller
         return redirect()
             ->route('stock-planner.prediction', $ingredient)
             ->with('status', ($explanation['cache_replaced'] ?? false) ? 'Qwen explanation regenerated in English.' : 'Qwen explanation generated in English.');
+    }
+
+    public function gptReview(Ingredient $ingredient): RedirectResponse
+    {
+        try {
+            $prediction = $this->predictionFor($ingredient);
+            $predictionInput = $this->inputBuilder->build($ingredient);
+            $restockAvailability = $this->planningService->availability($ingredient, $prediction, $predictionInput);
+            $pendingOrders = $ingredient->purchaseOrderItems()
+                ->with('purchaseOrder:id,supplier_id,status')
+                ->whereHas('purchaseOrder', fn ($query) => $query->whereIn('status', [
+                    \App\Models\PurchaseOrder::STATUS_DRAFT,
+                    \App\Models\PurchaseOrder::STATUS_PENDING_APPROVAL,
+                    \App\Models\PurchaseOrder::STATUS_APPROVED,
+                    \App\Models\PurchaseOrder::STATUS_SENT,
+                    \App\Models\PurchaseOrder::STATUS_CONFIRMED,
+                ]))
+                ->get()
+                ->map(fn ($item): array => [
+                    'id' => $item->purchase_order_id,
+                    'supplier_id' => $item->purchaseOrder?->supplier_id,
+                    'status' => $item->purchaseOrder?->status,
+                    'quantity' => (float) $item->quantity,
+                ])->all();
+
+            $review = $this->gptReviewService->review(
+                $ingredient,
+                (float) $ingredient->quantity,
+                (float) $ingredient->minimum_stock,
+                (float) ($predictionInput['stock_out_last_30_days'] ?? 0) / 30,
+                $pendingOrders,
+                $restockAvailability['supplier_comparison'] ?? null,
+                $prediction,
+            );
+
+            $message = $review['recommended_supplier_id'] === null
+                ? 'GPT-5.6 Review could not produce a safe procurement recommendation. Human approval is still required.'
+                : 'GPT-5.6 Review completed. No purchase order was created.';
+
+            return redirect()->route('stock-planner.prediction', $ingredient)
+                ->with('gpt_review', $review)
+                ->with($review['recommended_supplier_id'] === null ? 'error' : 'status', $message);
+        } catch (\Throwable) {
+            return redirect()->route('stock-planner.prediction', $ingredient)
+                ->with('error', 'GPT-5.6 Review is temporarily unavailable. No procurement action was taken.');
+        }
     }
 
     public function refresh(Ingredient $ingredient): RedirectResponse
